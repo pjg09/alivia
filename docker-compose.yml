@@ -1,0 +1,42 @@
+# Ambiente local completo: base de datos y correo. Nada sale a internet.
+# Arranque:  docker compose up -d  &&  ./db/aplicar.sh
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: alivia-postgres
+    environment:
+      POSTGRES_DB: alivia
+      POSTGRES_USER: alivia_propietario
+      POSTGRES_PASSWORD: desarrollo
+      # Fechas y ordenamiento coherentes con el dominio colombiano.
+      TZ: America/Bogota
+      PGTZ: America/Bogota
+    ports:
+      - "5434:5432"   # 5432 y 5433 suelen estar ocupados por otros proyectos
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alivia_propietario -d alivia"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: alivia-mailpit
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "1025:1025"   # SMTP: aqui escribe la aplicacion
+      - "8025:8025"   # Interfaz web y API de consulta
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  datos_postgres:
