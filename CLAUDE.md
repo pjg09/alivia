@@ -100,16 +100,17 @@ npx semantic-release --dry-run                     # ¿qué versión saldría?
 ## Verificar
 
 ```bash
-psql "$DATABASE_URL" -f db/pruebas/rls.sql         # 13 · aislamiento entre usuarios
-psql "$DATABASE_URL" -f db/pruebas/calendario.sql  # 18 · predial por municipio
-psql "$DATABASE_URL" -f db/pruebas/renta.sql       # 11 · renta por dígitos del NIT
-psql "$DATABASE_URL" -f db/pruebas/variantes.sql   # 16 · tecnomecánica por tipo de vehículo
-psql "$DATABASE_URL" -f db/pruebas/fuentes.sql     # 12 · respaldo de cada obligación
-psql "$DATABASE_URL" -f db/pruebas/anticipacion.sql # 9 · ventana de aviso
-python3 scripts/verificar-mailpit.py               # 8 · camino del aviso
+./scripts/verificar-todo.sh              # todo, contra el ambiente actual
+./scripts/verificar-todo.sh --reiniciar  # todo, recreando el esquema desde cero
 ```
 
-**Cruzar `aviso.mensaje_id` con el correo entregado** se hace así, y la sintaxis no es obvia: `GET /api/v1/search?query=message-id:<valor>`, con el prefijo `message-id:` y **sin** los corchetes angulares. Buscar el valor crudo devuelve cero resultados sin dar error. Es de lo que depende la tarea 36.
+Un solo comando, y es el mismo que corre la integración continua en cada envío a `main`. **Si algo está en rojo, no se publica versión.**
+
+**Una prueba nueva entra sola** si se pone donde toca: `db/pruebas/*.sql`, `scripts/verificar-*.py` o el script `test` de `package.json`. No hay ninguna lista que actualizar. Ponerla en otro sitio equivale a que nadie la corra.
+
+Las pruebas SQL corren con `alivia_app`, que está sujeto a las políticas. Si una necesita otro rol, lo declara en sus primeras líneas con `-- @rol: propietario`.
+
+**Cruzar `aviso.mensaje_id` con el correo entregado** tiene una sintaxis que no es obvia: `GET /api/v1/search?query=message-id:<valor>`, con el prefijo `message-id:` y **sin** los corchetes angulares. Buscar el valor crudo devuelve cero resultados sin dar error. Es de lo que depende la tarea 36.
 
 Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario; las de calendario, al tocar fechas o la función que las resuelve.
 

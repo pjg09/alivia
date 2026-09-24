@@ -34,7 +34,7 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 | 1 | Proyecto del servidor: TypeScript, estructura de carpetas, script de arranque en desarrollo | `npm run dev` levanta un proceso que compila y recarga | — |
 | 2 | Configuración leída del entorno y **validada al arrancar** | Falta una variable obligatoria y el proceso muere con un mensaje que dice cuál, en lugar de fallar más tarde | 1 |
 | 3 | Acceso a datos: pool de conexiones y función `conUsuario()` que abre transacción, fija `alivia.usuario_id` y la cierra | Toda consulta de datos de usuario pasa por ahí. Intentar consultar fuera de una transacción con contexto es imposible por construcción, no por disciplina | 2 |
-| 4 | Arnés de pruebas con esquema efímero: cada prueba corre contra una base limpia | `npm test` aplica migraciones y semillas desde cero y deja la base como la encontró | 3 |
+| 4 | Arnés de pruebas con esquema efímero: cada prueba corre contra una base limpia | `npm test` aplica migraciones y semillas desde cero y deja la base como la encontró. **Definir ese script en `package.json` basta para que la integración continua lo ejecute**: no hay que tocar el flujo de trabajo | 3 |
 | 5 | Las trece comprobaciones de `db/pruebas/rls.sql` portadas a la capa de datos de la aplicación | `npm test` falla si alguien conecta con el rol equivocado o pierde el contexto de transacción | 4 |
 | 6 | Manejo de errores HTTP y registro de peticiones | Un error no controlado devuelve un código y un cuerpo coherentes, y **nunca** filtra detalles internos ni datos de usuario | 1 |
 | 7 | Servidor Express con endpoint de salud | `GET /salud` responde y reporta si la base de datos y el correo están accesibles | 2, 6 |

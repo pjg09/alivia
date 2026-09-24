@@ -17,6 +17,7 @@ cp .env.example .env          # ajustar JWT_SECRETO
 docker compose up -d          # PostgreSQL + Mailpit
 ./db/aplicar.sh               # migraciones
 ./db/aplicar.sh --semillas    # catálogo base y usuarios de prueba
+./scripts/verificar-todo.sh   # comprobar que todo quedó bien
 ```
 
 | Servicio | Dónde | Para qué |
@@ -37,7 +38,8 @@ No hay despliegue. Todo corre en la máquina de cada integrante.
 | `docs/backlog.md` | Qué falta por construir, en orden de dependencias |
 | `docs/modelo-datos.md` | Las decisiones de modelado y por qué |
 | `docs/deuda-conocida.md` | Lo que estuvo mal a sabiendas y cómo se corrigió |
-| `db/pruebas/` | Verificaciones: aislamiento, calendarios de predial y de renta |
+| `db/pruebas/` | Pruebas de base de datos. Se descubren solas: ver `CONTRIBUTING.md` |
+| `scripts/` | Verificadores del proyecto y el ejecutor de todas las pruebas |
 | `CLAUDE.md` | Reglas del dominio que el código debe cumplir |
 
 ## Cómo se contribuye

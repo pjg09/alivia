@@ -1,5 +1,10 @@
 -- Verificacion de la curaduria de fuentes (deuda D4).
 --
+-- @rol: propietario
+--   Esta prueba administra el catálogo, que no es accesible con el rol de la
+--   aplicación. El resto de pruebas corre como alivia_app, que es lo correcto:
+--   es el rol con el que se conecta la API.
+--
 --   psql "$DATABASE_URL" -f db/pruebas/fuentes.sql
 --
 -- El alcance pide que cada obligacion declare la fuente normativa que respalda

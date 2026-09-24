@@ -98,6 +98,45 @@ BREAKING CHANGE: fuente_normativa deja de significar "lo que fija la fecha".
 
 **Nada de coautoría ni enlaces de sesión de herramientas de IA.** Ni `Co-Authored-By:`, ni referencias a la sesión que generó el cambio. El historial registra qué cambió y por qué, no con qué se escribió.
 
+## Pruebas
+
+**Todas las pruebas se corren en cada envío a `main`, y ninguna versión se publica si alguna falla.** El trabajo de publicación depende del de verificación y no hay forma de saltárselo.
+
+En local, lo mismo con un comando:
+
+```bash
+./scripts/verificar-todo.sh              # contra el ambiente que ya tienes
+./scripts/verificar-todo.sh --reiniciar  # recreando el esquema desde cero
+```
+
+### Dónde va una prueba nueva
+
+**No hay una lista de pruebas que mantener.** Se descubren por dónde están, así que una prueba nueva entra en la integración continua sola, sin tocar el flujo de trabajo ni ningún registro:
+
+| Dónde | Qué | Cómo se ejecuta |
+|---|---|---|
+| `db/pruebas/*.sql` | Pruebas de base de datos: esquema, políticas, datos | `psql`, una por fichero |
+| `scripts/verificar-*.py` | Verificadores del proyecto: orden del backlog, camino del aviso | `python3`, y su código de salida decide |
+| `npm test` | Pruebas de la aplicación: unitarias y de integración | En cuanto `package.json` defina el script |
+
+Poner una prueba en otro sitio equivale a que nadie la corra. Si hace falta una categoría nueva, se añade al descubrimiento en `scripts/verificar-todo.sh`, no al flujo de trabajo.
+
+### Cómo se escribe una prueba de base de datos
+
+Imprimen `ok` o `FALLA` por comprobación; **no devuelven código de error**, así que el ejecutor busca la palabra `FALLA` en la salida. Tres cosas cuentan como fallo:
+
+- Alguna línea dice `FALLA`.
+- `psql` termina con error, por ejemplo por sintaxis inválida.
+- El fichero **no produjo ninguna comprobación**. Una prueba que no comprueba nada suele ser una prueba rota, no una prueba que pasa.
+
+Corren con el rol `alivia_app`, que es con el que se conecta la API y el que está sujeto a las políticas de seguridad. Si una prueba necesita otro rol, lo declara en sus primeras líneas:
+
+```sql
+-- @rol: propietario
+```
+
+Usar el propietario salta las políticas de aislamiento, así que sólo se justifica para pruebas que administran el catálogo.
+
 ## Publicación de versiones
 
 Cada envío a `main` dispara el flujo de `.github/workflows/release.yml`, que ejecuta [semantic-release](https://semantic-release.gitbook.io/):
@@ -107,6 +146,8 @@ Cada envío a `main` dispara el flujo de `.github/workflows/release.yml`, que ej
 3. Genera `CHANGELOG.md` y actualiza la versión en `package.json`.
 4. Crea la etiqueta y la publicación en GitHub con las notas.
 5. Sube ese commit a `main` con `[skip ci]`, para no dispararse a sí mismo.
+
+**Antes de publicar se verifica.** El flujo levanta PostgreSQL y Mailpit, aplica el esquema desde cero y corre todas las pruebas. Si algo falla, no se publica: el trabajo de publicación declara `needs: verificar`.
 
 **Si ningún commit del envío es `feat`, `fix`, `perf`, `refactor` o `revert`, no se publica nada.** Es lo normal y no es un error: un envío de solo documentación no cambia la versión.
 
@@ -123,9 +164,10 @@ npx semantic-release --dry-run                     # ¿qué versión saldría?
 
 Los diez primeros commits del repositorio son anteriores a esta convención y no la cumplen. **No se reescriben**: sus mensajes son descriptivos y el formato no vale perder ese contenido.
 
-El punto de partida se marca con una etiqueta `v0.1.0` puesta a mano sobre el último de ellos, para que semantic-release analice solo lo que viene después:
+El punto de partida está marcado con la etiqueta **`v0.1.0`** sobre el último de ellos, para que semantic-release analice sólo lo que viene después. Sin esa etiqueta, el primer `feat` publicaría `1.0.0`, que prometería una estabilidad que el proyecto no tiene; con ella, sube por `0.x` mientras se construye.
+
+**La etiqueta se envía junto con `main`, o antes.** Enviar `main` sin ella dispara el flujo, no encuentra etiqueta previa y publica `1.0.0`:
 
 ```bash
-git tag -a v0.1.0 <sha> -m "Punto de partida: esquema, calendarios y deuda saldada"
-git push origin v0.1.0
+git push origin main --follow-tags
 ```
