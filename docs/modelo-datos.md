@@ -115,15 +115,9 @@ Restricción `sancionable_exige_fuente`. Impide por construcción que se cuele u
 
 ## 3. Limitaciones conocidas
 
-Ninguna es un descuido: son decisiones de no resolver algo todavía.
+Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para resolver cada una. No se repiten aquí para que no haya dos versiones que se contradigan.
 
-| Limitación | Consecuencia | Qué haría falta |
-|---|---|---|
-| **Las obligaciones de fecha fija de calendario no se modelan.** La declaración de renta vence según los últimos dígitos del NIT y el predial según el acuerdo de cada municipio. No son periodicidad relativa a una fecha base del usuario | Hoy se tratan como anuales desde una fecha que el usuario declara, lo cual es **incorrecto** para ambas | Un tipo de recurrencia por calendario, con tabla de fechas oficiales por año. Es trabajo de curaduría antes que de esquema |
-| **La tecnomecánica no distingue carro de motocicleta** (quinto año contra segundo) | El desfase sembrado es el de carros particulares | Variantes de una misma obligación según un atributo del bien declarado por el usuario |
-| **Ninguna fuente normativa está verificada** | Las 40 entradas del catálogo llevan `fuente_verificada = false` | Curaduría contra la norma. Es el trabajo que le da valor al producto |
-| **No hay interfaz de administración del catálogo** | Se administra con SQL, por el propietario | Está fuera del alcance de esta etapa |
-| **El usuario tiene una sola ventana de anticipación**, común a todas sus obligaciones | No se puede pedir aviso con 30 días para el SOAT y 3 para el pago de una tarjeta | Una columna opcional en `obligacion_usuario` que tenga prioridad sobre la del usuario. Barato de añadir cuando haga falta |
+Las dos que importan antes de construir encima: **el impuesto predial (D1) y la declaración de renta (D2) hoy se calculan mal**, porque ninguna de las dos es una obligación de periodicidad relativa a una fecha que el usuario declare.
 
 ---
 

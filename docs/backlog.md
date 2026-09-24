@@ -1,0 +1,178 @@
+# Backlog
+
+De donde está el proyecto hoy hasta la aplicación completa.
+
+**El orden es una dependencia, no una sugerencia.** Leyendo de arriba abajo, ninguna tarea depende de otra posterior: la columna `Dep.` solo contiene números menores al de su propia fila. Eso lo comprueba un script, no la buena fe:
+
+```bash
+python3 scripts/verificar-backlog.py
+```
+
+Si alguien añade o reordena tareas, ese script tiene que seguir pasando.
+
+**Qué significa cada columna**
+
+| Columna | Qué es |
+|---|---|
+| `#` | Identificador estable. No se reutiliza ni se renumera |
+| Tarea | Qué se construye |
+| Hecho cuando | La condición que decide si está terminada. Si no se puede comprobar, no es un criterio |
+| Dep. | Tareas que deben estar terminadas antes. Siempre números menores |
+
+**Lo que ya está hecho** y por eso no aparece aquí: ambiente de contenedores, las ocho migraciones del esquema, el catálogo sembrado con 40 entradas y la verificación de aislamiento en `db/pruebas/rls.sql`.
+
+**Paralelismo.** Son cuatro personas. Dos tareas con el mismo número en `Dep.` y sin relación entre sí pueden ir a la vez; el grafo de dependencias es lo que dice qué se puede repartir, no la numeración.
+
+---
+
+## Fase 0 · Cimientos del código
+
+Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea 3 es la más importante del proyecto: es donde vive el patrón del que cuelga el aislamiento entre usuarios.
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 1 | Proyecto del servidor: TypeScript, estructura de carpetas, script de arranque en desarrollo | `npm run dev` levanta un proceso que compila y recarga | — |
+| 2 | Configuración leída del entorno y **validada al arrancar** | Falta una variable obligatoria y el proceso muere con un mensaje que dice cuál, en lugar de fallar más tarde | 1 |
+| 3 | Acceso a datos: pool de conexiones y función `conUsuario()` que abre transacción, fija `alivia.usuario_id` y la cierra | Toda consulta de datos de usuario pasa por ahí. Intentar consultar fuera de una transacción con contexto es imposible por construcción, no por disciplina | 2 |
+| 4 | Arnés de pruebas con esquema efímero: cada prueba corre contra una base limpia | `npm test` aplica migraciones y semillas desde cero y deja la base como la encontró | 3 |
+| 5 | Las trece comprobaciones de `db/pruebas/rls.sql` portadas a la capa de datos de la aplicación | `npm test` falla si alguien conecta con el rol equivocado o pierde el contexto de transacción | 4 |
+| 6 | Manejo de errores HTTP y registro de peticiones | Un error no controlado devuelve un código y un cuerpo coherentes, y **nunca** filtra detalles internos ni datos de usuario | 1 |
+| 7 | Servidor Express con endpoint de salud | `GET /salud` responde y reporta si la base de datos y el correo están accesibles | 2, 6 |
+| 8 | Convenciones de código y formato automático | El formateador corre igual en las cuatro máquinas y no genera ruido en los diffs | 1 |
+
+---
+
+## Fase 1 · Cuentas
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 9 | Hash y verificación de contraseña con Argon2 | Una contraseña correcta verifica, una incorrecta no, y el hash nunca sale en un registro ni en una respuesta | 4 |
+| 10 | Token de sesión: emisión y verificación | Un token válido identifica al usuario; uno manipulado, caducado o firmado con otra clave se rechaza | 2, 4 |
+| 11 | Registro de usuario, vía `app.registrar_usuario()` | Crea la cuenta, **deja constancia de la autorización de tratamiento en la misma transacción** y activa los tres módulos gratuitos | 3, 7, 9, 10 |
+| 12 | Ingreso, vía `app.credenciales_por_correo()` | Devuelve sesión con credenciales correctas. Con correo inexistente o contraseña errada, la respuesta y el tiempo de respuesta son indistinguibles entre sí | 3, 7, 9, 10 |
+| 13 | Middleware de autenticación: del token al contexto de la transacción | Una petición sin token o con token inválido no llega al manejador. El identificador que usa `conUsuario()` sale del token, nunca del cuerpo ni de la URL | 7, 10 |
+| 14 | Perfil: consultar y editar nombre, ventana de anticipación y activación de avisos | El usuario cambia su ventana a 30 días y el cambio persiste | 3, 13 |
+| 15 | Prueba de extremo a extremo: registro, ingreso, perfil, y **un usuario no alcanza los datos del otro por ninguna ruta HTTP** | `npm test` cubre el recorrido completo y el intento cruzado falla | 5, 11, 12, 14 |
+
+---
+
+## Fase 2 · Catálogo y módulos
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 16 | Listar los siete módulos con el estado de cada uno para el usuario: activo, disponible o requiere suscripción | La respuesta distingue los tres estados sin que la interfaz tenga que deducirlos | 3, 13 |
+| 17 | Listar el catálogo de un módulo, separando obligaciones sancionables de tareas recomendadas | La respuesta trae periodicidad, fuente normativa y **si esa fuente está verificada o no** | 16 |
+| 18 | Activar y desactivar módulos gratuitos | Desactivar suspende el acceso y **no borra nada**: reactivar devuelve las obligaciones intactas | 16 |
+
+---
+
+## Fase 3 · Obligaciones del usuario
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 19 | Cálculo de vencimientos como función pura: primer vencimiento desde la fecha base con `desfase_primera`, y siguiente desde el anterior | Pruebas que cubren año bisiesto, el desfase de cinco años de la tecnomecánica y periodicidades en meses | 4 |
+| 20 | Crear obligación desde el catálogo: copia el snapshot y genera la primera ocurrencia | Los datos del catálogo quedan copiados, no referenciados: cambiar el catálogo después no mueve este vencimiento | 3, 17, 18, 19 |
+| 21 | Crear obligación libre, sin catálogo | El usuario define nombre, fecha y periodicidad propias | 20 |
+| 22 | Listar obligaciones del usuario y las próximas a vencer | Ordenadas por vencimiento, con los días que faltan calculados contra `app.hoy()` y no contra el reloj del proceso | 20 |
+| 23 | Editar una obligación: nombre, fecha base, periodicidad | Cambiar la fecha base recalcula la ocurrencia pendiente, y no toca las ya cumplidas | 22 |
+| 24 | Marcar una ocurrencia como cumplida y **generar sola la siguiente** | Al cumplir, aparece la siguiente ocurrencia con la fecha correcta. La cumplida queda en el historial | 19, 22 |
+| 25 | Archivar una obligación sin destruir su historial | La obligación desaparece de las vistas activas y sus ocurrencias siguen en la base | 22 |
+| 26 | Confirmación explícita en toda acción destructiva | Ninguna ruta elimina o archiva sin una confirmación distinta de la propia acción | 25 |
+| 27 | Prueba de la reprogramación automática a lo largo de varios ciclos | Cumplir tres veces seguidas produce tres vencimientos correctos y ningún duplicado | 24 |
+
+---
+
+## Fase 4 · El servicio de avisos
+
+**Esta fase es el producto.** El criterio único de aceptación se gana o se pierde aquí; todo lo anterior es andamiaje para llegar.
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 28 | Cliente SMTP hacia Mailpit | Un correo de prueba sale del proceso y aparece en la bandeja de `localhost:8025` | 2, 4 |
+| 29 | Plantilla del correo de aviso: qué vence, cuándo, de qué módulo y qué pasa si no se cumple | El correo se lee bien en texto plano, no solo en HTML | 28 |
+| 30 | Consulta de las obligaciones que vencen **dentro de la ventana de anticipación de cada usuario**, con el rol `alivia_avisos` | La consulta parte de la anticipación, no del vencimiento. Buscar lo ya vencido es avisar tarde | 3, 22 |
+| 31 | Proceso de evaluación diaria: selecciona, envía y **registra el resultado real del envío** | Un envío que falla queda como `fallido` con su error. Nada se marca `entregado` sin que el servidor SMTP lo haya aceptado | 29, 30 |
+| 32 | Idempotencia verificada: correr la evaluación dos veces el mismo día no duplica avisos | La segunda ejecución no genera correos nuevos ni filas nuevas | 31 |
+| 33 | Reintento de avisos fallidos, con tope de intentos | Un fallo transitorio se reintenta; uno permanente deja de consumir intentos y queda registrado | 31 |
+| 34 | Comando de disparo bajo demanda, con fecha de referencia inyectable | `npm run avisos -- --fecha 2026-12-01` evalúa como si hoy fuera esa fecha. **Sin esto no hay sustentación posible** | 31 |
+| 35 | Programación diaria dentro del proceso del servidor | La evaluación corre sola una vez al día y deja constancia de cada ejecución | 31 |
+| 36 | **Prueba del criterio único de aceptación contra la API de Mailpit** | Se siembra un vencimiento, se corre la evaluación con fecha controlada y se verifica en la bandeja que el aviso existe, es del usuario correcto y **salió antes del vencimiento**. Es la prueba que no puede fallar nunca | 5, 34 |
+| 37 | Baja de avisos y frecuencia configurable, por la Ley 2300 de 2023 | El usuario desactiva los avisos y deja de recibirlos, sin perder sus datos | 14, 31 |
+
+> **Hito.** Terminada la tarea 36, el producto cumple lo único con lo que se comprometió. Todo lo que viene después lo hace usable y vendible, pero el compromiso ya está cumplido y demostrable.
+
+---
+
+## Fase 5 · Suscripciones y pasarela simulada
+
+No mueve dinero y no habla con ningún proveedor. Reproduce el flujo para demostrar la conversión.
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 38 | Simulador de pasarela: iniciar un pago | Queda un pago `iniciado` con su referencia única | 3, 13 |
+| 39 | Cerrar el pago: aprobado, rechazado o expirado, los tres forzables | Los cuatro estados se pueden provocar a voluntad para demostrarlos | 38 |
+| 40 | Crear la suscripción con vigencia al aprobar el pago | Un pago aprobado deja una suscripción con inicio y fin. Dos suscripciones del mismo módulo no se solapan: lo impide el motor | 39 |
+| 41 | Activar un módulo de pago con suscripción vigente | Sin suscripción no se puede activar **por ninguna ruta**, incluida una petición hecha a mano | 18, 40 |
+| 42 | Expiración de la suscripción: suspende el acceso y conserva los datos | Al expirar, el usuario deja de ver ese módulo; al renovar, sus obligaciones reaparecen intactas | 41 |
+| 43 | Prueba del flujo completo de conversión | Pago, suscripción, activación, expiración y renovación, verificados de extremo a extremo | 41, 42 |
+
+---
+
+## Fase 6 · Interfaz web
+
+El alcance pide no gastar esfuerzo en decoración, con una excepción declarada: **la configuración inicial y el primer aviso son los dos momentos de verdad**. Si la carga del catálogo confunde, el usuario abandona antes de recibir un solo aviso y el producto nunca demuestra para qué sirve. Las tareas 48 a 50 son ese momento.
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 44 | Proyecto de interfaz con React y Vite, con proxy al servidor | `npm run dev` sirve la interfaz y las llamadas al servidor funcionan sin configurar CORS | 7 |
+| 45 | Cliente HTTP y manejo de sesión en la interfaz | El token se guarda, se envía en cada petición y se descarta al caducar, llevando al ingreso | 12, 13, 44 |
+| 46 | Pantallas de registro e ingreso, con la autorización de tratamiento de datos explícita | No se puede crear una cuenta sin autorizar el tratamiento de forma deliberada. Una casilla premarcada no es autorización | 11, 45 |
+| 47 | Navegación y diseño base, responsivo | Se usa en un teléfono sin desplazamiento horizontal | 46 |
+| 48 | Selección de áreas de la vida a gestionar | El usuario elige entre los siete módulos y ve cuáles son gratuitos | 16, 18, 47 |
+| 49 | **Carga del catálogo al activar un área.** El momento en que se entrega el valor diferencial | Al activar «Vehículo», el usuario ve SOAT y tecnomecánica con sus plazos reales, distinguiendo lo sancionable de lo recomendado, **sin haber escrito nada** | 17, 48 |
+| 50 | Ajuste de las fechas base y alta de las obligaciones elegidas | El usuario dice cuándo compró el carro y el sistema muestra el vencimiento que calculó | 20, 49 |
+| 51 | Panel principal con las obligaciones próximas a vencer | Lo primero que se ve al entrar es qué vence pronto, ordenado por urgencia | 22, 47 |
+| 52 | Vista por módulo | Se puede mirar un área concreta sin el ruido de las demás | 51 |
+| 53 | Marcar cumplida desde la interfaz, mostrando la siguiente fecha | Al marcar cumplido, la interfaz dice cuándo vuelve a vencer. Es donde se ve que el producto piensa por el usuario | 24, 51 |
+| 54 | Crear un recordatorio libre | Se puede añadir algo que no esté en el catálogo | 21, 52 |
+| 55 | Preferencias de aviso en el perfil | Cambiar la ventana de anticipación y desactivar los avisos, desde la interfaz | 14, 37, 47 |
+| 56 | Flujo de activación de un módulo de pago, con la pasarela simulada | El recorrido completo se demuestra sin salir de la máquina | 41, 52 |
+| 57 | Confirmaciones destructivas en la interfaz | Archivar o desactivar pide confirmación y dice exactamente qué pasará con los datos | 26, 53 |
+
+---
+
+## Fase 7 · Cumplimiento, deuda y cierre
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 58 | Política de tratamiento de datos, redactada y accesible desde la aplicación | Se puede leer antes de autorizar, no después | 46 |
+| 59 | Autorización separada para datos de salud, con negativa sin penalización | Quien no autoriza datos de salud **conserva el resto del servicio completo**. Es categoría especial bajo la Ley 1581 de 2012 | 48, 58 |
+| 60 | Canal de consultas y reclamos del titular | Existe una vía documentada para ejercer los derechos de la ley, con sus plazos declarados | 58 |
+| 61 | **Deuda D1 y D2: recurrencia por calendario** para predial y renta | El predial y la renta dejan de calcularse desde una fecha base inventada. Ver `docs/deuda-conocida.md` | 20, 49 |
+| 62 | Deuda D3: la tecnomecánica distingue carro de motocicleta | Un motociclista recibe su primer aviso al segundo año, no al quinto | 61 |
+| 63 | Deuda D4: curaduría de las fuentes normativas del catálogo | Solo las entradas efectivamente comprobadas contra la norma quedan con `fuente_verificada = true` | 17 |
+| 64 | Modelo de información documentado, derivado del esquema | Entregable 7 del alcance. Se genera del esquema real, no se redacta aparte | 61 |
+| 65 | Semillas de demostración y guion de sustentación | Un comando deja la base en un estado que permite recorrer el producto entero delante de un jurado | 36, 43, 56 |
+| 66 | Repaso final contra las seis reglas duras de `CLAUDE.md` | Cada regla tiene una prueba que la respalda, o una explicación de por qué no la tiene | 65 |
+
+---
+
+## Dos advertencias sobre este orden
+
+### La deuda D1 y D2 está colocada tarde, y eso cuesta
+
+La tarea 61 arregla el predial y la declaración de renta, que **hoy se calculan mal**. Está en la fase 7 porque así se decidió, pero conviene saber lo que implica:
+
+- Para cuando se aborde, ya habrá obligaciones creadas con el modelo equivocado, y habrá que migrarlas.
+- Las pantallas de las tareas 49 y 50 estarán construidas suponiendo que toda obligación tiene fecha base, y tendrán que admitir un segundo tipo.
+- Dos de las cinco obligaciones emblema del producto —SOAT, tecnomecánica, **predial**, **renta**, controles médicos— estarán dando avisos en fechas sin relación con el vencimiento real durante todo ese tiempo.
+
+**Dónde sería barato:** justo después de la tarea 27, antes de que exista interfaz. Ahí no hay datos que migrar ni pantallas que rehacer. Moverlo es cambiar un número.
+
+**Mientras no se arregle**, lo honesto es que el predial y la renta no se presenten como fechas calculadas por el sistema: o las declara el usuario, o salen del catálogo.
+
+### El producto está terminado en la tarea 36, no en la 66
+
+El compromiso del proyecto es que el aviso llegue antes del vencimiento. Eso queda demostrado en la tarea 36, con treinta tareas por delante todavía.
+
+Si el tiempo se acaba —y el cronograma son 114 días hábiles que no caben en un semestre—, lo que se recorta sale de las fases 5 a 7, nunca de la 4. Un producto sin interfaz bonita sigue siendo Alivia. Un producto que avisa tarde es otra cosa.

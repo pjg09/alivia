@@ -81,4 +81,16 @@ Trece comprobaciones. Cualquier línea que diga `FALLA` es un defecto. Correrlo 
 
 Hay ambiente, esquema y catálogo sembrado. **No hay aplicación todavía**: ni servidor, ni interfaz, ni pruebas de la aplicación. Lo siguiente es el esqueleto del servidor con el patrón de contexto por transacción, que es de lo que cuelga la regla 1.
 
-Las decisiones del modelo y sus limitaciones conocidas están en `docs/modelo-datos.md`. Hay tres limitaciones que importan antes de construir encima: las obligaciones de fecha fija de calendario (renta, predial) **hoy se modelan mal**, la tecnomecánica no distingue carro de moto, y ninguna fuente normativa del catálogo está verificada.
+## Dónde mirar
+
+| Documento | Para qué |
+|---|---|
+| `docs/backlog.md` | **Qué hacer y en qué orden.** 66 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
+| `docs/modelo-datos.md` | Por qué el esquema es como es |
+| `docs/deuda-conocida.md` | Lo que está mal a sabiendas, con su costo |
+
+Al tomar la siguiente tarea, leer su fila del backlog: la columna «Hecho cuando» es el criterio de aceptación, no una sugerencia.
+
+El orden del backlog se comprueba con `python3 scripts/verificar-backlog.py`. Si se añaden o reordenan tareas, ese script tiene que seguir pasando.
+
+**Antes de construir sobre el modelo de datos**, conocer D1 y D2 de `docs/deuda-conocida.md`: el impuesto predial y la declaración de renta **hoy se calculan mal**, y son dos de las cinco obligaciones emblema del producto.
