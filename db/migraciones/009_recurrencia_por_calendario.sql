@@ -180,10 +180,6 @@ REVOKE ALL ON FUNCTION app.proximo_vencimiento_calendario(text, text, text, text
 GRANT EXECUTE ON FUNCTION app.proximo_vencimiento_calendario(text, text, text, text, date)
   TO alivia_app, alivia_avisos;
 
--- El predial pasa a ser obligacion de calendario. Es el cambio que salda D1.
-UPDATE obligacion_catalogo
-   SET tipo_recurrencia = 'calendario',
-       periodicidad = NULL,
-       descripcion = 'Lo fija el acuerdo o la resolucion de cada municipio. '
-                     'Sin calendario cargado, la fecha la declara el usuario.'
- WHERE codigo = 'hogar.predial';
+-- El predial pasa a ser obligacion de calendario: ese UPDATE vive en
+-- db/semillas/021_ajustes_catalogo.sql, porque es contenido y no estructura.
+-- Puesto aqui correria contra una tabla vacia: las semillas se aplican despues.

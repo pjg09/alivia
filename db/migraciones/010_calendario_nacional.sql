@@ -75,11 +75,5 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, app AS $$
   LIMIT 1;
 $$;
 
--- La renta pasa a ser obligación de calendario. Es el cambio que salda D2.
-UPDATE obligacion_catalogo
-   SET tipo_recurrencia = 'calendario',
-       periodicidad = NULL,
-       descripcion = 'El plazo depende de los dos últimos dígitos del NIT y lo fija '
-                     'un decreto nacional que se expide cada año. Sin calendario '
-                     'cargado, la fecha la declara el usuario.'
- WHERE codigo = 'finanzas.renta';
+-- La renta pasa a ser obligación de calendario: ese UPDATE vive en
+-- db/semillas/021_ajustes_catalogo.sql. Ver la nota de la migración 009.

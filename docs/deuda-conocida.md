@@ -119,15 +119,36 @@ Varias publicaciones especializadas citaban el **Decreto 2229 de 2023** como nor
 
 ---
 
-## D3 · La tecnomecánica no distingue carro de motocicleta
+## D3 · RESUELTO — La tecnomecánica no distinguía carro de motocicleta
 
-**Gravedad: media.**
+**Resuelto el 24 de septiembre de 2026.**
 
-La primera revisión se exige al **quinto año** en carros particulares y al **segundo** en motocicletas. El campo `desfase_primera` soporta un solo valor por entrada del catálogo, y está sembrado con el de carros.
+### Qué estaba mal
 
-Un motociclista recibiría su primer aviso tres años tarde.
+El catálogo guardaba un solo `desfase_primera`, el de carros particulares. **Un motociclista habría recibido su primer aviso al quinto año en lugar del segundo: tres años tarde**, con tres años de multa posible por delante.
 
-**Qué haría falta:** variantes de una misma obligación según un atributo del bien que el usuario declara, o entradas separadas en el catálogo con un campo que indique a qué tipo de vehículo aplican.
+### Lo que dice la norma, ya verificada
+
+| Artículo | Texto vigente según | Qué establece |
+|---|---|---|
+| **51** · periodicidad | art. 201 del Decreto 019 de 2012 | «todos los vehículos automotores deben someterse **anualmente** a revisión técnico-mecánica y de emisiones contaminantes» |
+| **52** · primera revisión | art. 179 de la **Ley 2294 de 2023** | Particular distinto de motocicleta: **a partir del quinto (5.º) año**. Servicio público y motocicletas: **al cumplir dos (2) años** |
+
+**Aviso para quien vuelva sobre esto:** el artículo 12 de la **Ley 1383 de 2010** dice que todo vehículo nuevo se revisa a los dos años, sin distinguir tipo. Está superado por la Ley 2294 de 2023. Quien consulte esa ley sin mirar las modificaciones posteriores sembrará el dato mal — es justo lo que estuvo a punto de pasar aquí.
+
+### Cómo quedó resuelto
+
+Migración `011_variantes_de_obligacion.sql`:
+
+- `variante_obligacion`: una misma obligación con plazos distintos según un atributo del bien. Tres variantes sembradas: particular, motocicleta y servicio público.
+- `obligacion_catalogo.atributo_variante` declara qué debe elegir el usuario (`tipo_vehiculo`). NULL en las obligaciones que no tienen variantes, que son casi todas.
+- Un **disparador** impide crear la obligación sin declarar la variante cuando el catálogo la exige, y rechaza una variante que pertenezca a otra obligación. No es un CHECK porque cruza tablas; y no se deja a la aplicación porque olvidarlo una vez significa avisar del vehículo equivocado.
+
+Verificado en `db/pruebas/variantes.sql`, doce comprobaciones. Entre ellas el caso que motivaba la deuda: una moto matriculada en marzo de 2026 vence en **marzo de 2028**, y un carro de la misma fecha en **marzo de 2031**.
+
+### Efecto lateral sobre D4
+
+La tecnomecánica pasa a ser **la primera entrada del catálogo con `fuente_verificada = true`**, porque su fuente se leyó en el texto vigente de la norma y no en un resumen.
 
 ---
 
@@ -135,7 +156,7 @@ Un motociclista recibiría su primer aviso tres años tarde.
 
 **Gravedad: media, y es el trabajo que le da valor al producto.**
 
-Las 40 entradas del catálogo tienen `fuente_verificada = false`. Ocho están marcadas como sancionables y su fuente dice literalmente «artículo sin verificar» o «pendiente».
+De las 40 entradas del catálogo, **una sola** tiene `fuente_verificada = true`: la revisión técnico-mecánica, verificada al resolver [D3](#d3--resuelto--la-tecnomecánica-no-distinguía-carro-de-motocicleta). Las otras 39 siguen sin comprobar, y siete de las ocho sancionables tienen una fuente que dice literalmente «artículo sin verificar» o «pendiente».
 
 El diferenciador declarado del producto es el catálogo curado con respaldo normativo. Hoy el respaldo no existe: hay una cita de la ley pero no el artículo, y nadie lo comprobó contra la norma.
 

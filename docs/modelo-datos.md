@@ -2,7 +2,9 @@
 
 **La fuente de verdad son las migraciones de `db/migraciones/`.** Este documento explica *por qué* el esquema es como es. Si los dos se contradicen, gana el SQL y este documento está desactualizado.
 
-Verificado el 23 de septiembre de 2026 contra PostgreSQL 16 en contenedor: las ocho migraciones aplican desde cero y `db/pruebas/rls.sql` pasa sus trece comprobaciones.
+Verificado el 24 de septiembre de 2026 contra PostgreSQL 16 en contenedor, **desde un reinicio completo del esquema**: las once migraciones y las ocho semillas aplican desde cero y las cuatro pruebas de `db/pruebas/` pasan sus 58 comprobaciones.
+
+Verificar desde cero no es una formalidad: tres `UPDATE` de catálogo metidos en migraciones no hacían nada en una instalación limpia, y sólo funcionaban en la máquina donde se habían ido añadiendo incrementalmente.
 
 ---
 
@@ -56,6 +58,8 @@ El alcance dice «periodicidad en días». El esquema usa `interval` porque 365 
 `desfase_primera` existe por un caso real del dominio: la revisión técnico-mecánica se exige por primera vez **al quinto año** en carros particulares, y desde entonces es anual.
 
 Sin ese campo, el sistema le avisaría a alguien que acaba de comprar un carro de una tecnomecánica que no es exigible hasta dentro de cinco años. Es el tipo de error que destruye la credibilidad del producto entero: la promesa es que la aplicación *sabe* cuándo vence cada cosa.
+
+Y ese desfase no es uno solo: las motocicletas y el servicio público se revisan **a los dos años**. Por eso existe `variante_obligacion` (2.14).
 
 ### 2.5 Fechas civiles y instantes no se mezclan
 
@@ -117,7 +121,7 @@ Restricción `sancionable_exige_fuente`. Impide por construcción que se cuele u
 
 Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para resolver cada una. No se repiten aquí para que no haya dos versiones que se contradigan.
 
-**D1 y D2 quedaron saldados** con la recurrencia por calendario (2.13). Lo que sigue abierto son las deudas D3 a D6, ninguna estructural: son carga de datos y alcance declarado.
+**D1, D2 y D3 quedaron saldados.** Lo que sigue abierto son D4, D5 y D6: carga de datos y alcance declarado, nada estructural.
 
 ### 2.13 Hay tres formas de saber cuándo vence algo
 
@@ -131,6 +135,14 @@ El mismo modelo sirve para la declaración de renta, que es de ámbito nacional:
 
 Las fechas marcadas `con_recargo` se guardan pero nunca generan aviso: avisar de ellas es avisar de que ya se pagó de más.
 
+### 2.14 Una obligación puede tener variantes según el bien declarado
+
+La tecnomecánica vence distinto según qué se conduzca: quinto año para un carro particular, segundo para una moto o un vehículo de servicio público. Un solo `desfase_primera` en el catálogo le habría dado al motociclista su primer aviso tres años tarde.
+
+`variante_obligacion` guarda esos plazos, `obligacion_catalogo.atributo_variante` declara qué debe elegir el usuario, y un disparador impide crear la obligación sin esa elección cuando hace falta. Es un disparador y no un CHECK porque la regla cruza dos tablas; y no se deja a la aplicación porque olvidarlo una vez significa avisar del vehículo equivocado.
+
+Casi ninguna obligación tiene variantes. La estructura existe porque el dominio la pidió una vez y volverá a pedirla.
+
 ---
 
 ## 4. Cómo se verifica
@@ -141,6 +153,7 @@ docker compose up -d
 psql "$DATABASE_URL" -f db/pruebas/rls.sql
 psql "$DATABASE_URL" -f db/pruebas/calendario.sql
 psql "$DATABASE_URL" -f db/pruebas/renta.sql
+psql "$DATABASE_URL" -f db/pruebas/variantes.sql
 ```
 
-Trece comprobaciones de aislamiento, diecisiete de calendario municipal y once de renta. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.
+Trece comprobaciones de aislamiento, dieciocho de calendario municipal, once de renta y doce de variantes. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.

@@ -66,6 +66,8 @@ Bandeja de correo: http://localhost:8025 · API de consulta: `http://localhost:8
 
 - **Todo en español**: identificadores, columnas, mensajes de commit, comentarios y textos de interfaz.
 - El esquema se cambia **añadiendo una migración**, nunca editando una ya aplicada.
+- **Las migraciones son estructura; el contenido va en semillas.** `aplicar.sh` corre todas las migraciones antes que las semillas, así que un `UPDATE` sobre el catálogo metido en una migración se ejecuta contra una tabla vacía y no hace nada, sin dar error. Funciona en la máquina de quien fue añadiendo migraciones sobre una base ya sembrada, y falla en una instalación desde cero. Ya pasó una vez, con tres migraciones a la vez.
+- **Verificar siempre desde un reinicio completo**, no incrementalmente: `./db/aplicar.sh --reiniciar && ./db/aplicar.sh --semillas`. Es la única forma de reproducir lo que verán los demás.
 - Ningún secreto en el repositorio, ni siquiera de pruebas. `.env.example` lleva plantillas, no valores reales.
 - No inventar comandos de build o test que no existan todavía: este repositorio está empezando.
 
@@ -75,6 +77,7 @@ Bandeja de correo: http://localhost:8025 · API de consulta: `http://localhost:8
 psql "$DATABASE_URL" -f db/pruebas/rls.sql         # 13 · aislamiento entre usuarios
 psql "$DATABASE_URL" -f db/pruebas/calendario.sql  # 18 · predial por municipio
 psql "$DATABASE_URL" -f db/pruebas/renta.sql       # 11 · renta por dígitos del NIT
+psql "$DATABASE_URL" -f db/pruebas/variantes.sql   # 12 · tecnomecánica por tipo de vehículo
 ```
 
 Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario; las de calendario, al tocar fechas o la función que las resuelve.
@@ -95,6 +98,6 @@ Al tomar la siguiente tarea, leer su fila del backlog: la columna «Hecho cuando
 
 El orden del backlog se comprueba con `python3 scripts/verificar-backlog.py`. Si se añaden o reordenan tareas, ese script tiene que seguir pasando.
 
-**D1 y D2 están resueltos**: el predial y la declaración de renta se calculan contra el calendario que fija la norma, no contra una fecha base inventada. Lo que queda son deudas de datos, no de modelo — ver `docs/deuda-conocida.md`.
+**D1, D2 y D3 están resueltos**: el predial y la renta se calculan contra el calendario que fija la norma, y la tecnomecánica distingue carro de moto. Lo que queda son deudas de datos, no de modelo — ver `docs/deuda-conocida.md`.
 
 **Lo que hay que tener presente al construir encima:** los calendarios cargados solo cubren **2026**. Los decretos se expiden cada año hacia diciembre, así que el sistema se queda sin fechas en enero salvo que alguien las recargue.
