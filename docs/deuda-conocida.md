@@ -6,9 +6,9 @@ Cada entrada tiene un identificador estable (`D1`, `D2`…) al que el backlog ha
 
 ---
 
-## D1 · El impuesto predial no es una obligación de periodicidad relativa
+## D1 · RESUELTO — El impuesto predial no era una obligación de periodicidad relativa
 
-**Estado: saldado en el modelo el 24 de septiembre de 2026. Queda pendiente la carga de ocho municipios.**
+**Resuelto el 24 de septiembre de 2026.** El modelo soporta ahora la recurrencia por calendario y hay cinco municipios cargados contra su resolución. Lo que queda abierto es carga de datos, no un defecto del modelo.
 
 ### Qué estaba mal
 
@@ -81,31 +81,41 @@ Además, **las fechas se modifican durante la vigencia**: Bello amplió el plazo
 
 ---
 
-## D2 · La declaración de renta depende del NIT, no de una fecha base
+## D2 · RESUELTO — La declaración de renta dependía del NIT, no de una fecha base
 
-**Gravedad: alta.** Mismo problema que D1, con un agravante.
+**Resuelto el 24 de septiembre de 2026.**
 
-### Qué está mal
+### Qué estaba mal
 
-El vencimiento de la declaración de renta de personas naturales lo fija el **calendario tributario que la DIAN publica cada año**, y la fecha concreta depende de los **últimos dígitos del NIT** de cada contribuyente. No hay ninguna fecha base que el usuario pueda declarar de la que se derive su vencimiento.
+El vencimiento de la declaración de renta de personas naturales lo fija un decreto nacional que se expide cada año, y la fecha concreta depende de los **dos últimos dígitos del NIT** del contribuyente, sin el dígito de verificación. No hay fecha base que el usuario pueda declarar de la que se derive su vencimiento, ni depende del municipio.
 
-El catálogo la tiene sembrada como anual desde una fecha base. Es incorrecto.
+El catálogo la tenía sembrada como anual desde una fecha base. Era incorrecto.
 
-### El agravante
+### Cómo quedó resuelto
 
-A diferencia del predial, cuya fecha es estable de año en año dentro de un municipio, **el calendario tributario cambia todos los años** y se publica por decreto. Una tabla de fechas sembrada una vez queda obsoleta en el siguiente ciclo.
+Migración `010_calendario_nacional.sql`. El modelo de calendario de D1 ya servía salvo por un supuesto: daba por hecho que todo calendario es municipal.
 
-### Qué haría falta
+- `calendario_tributario.ambito` distingue `nacional` de `municipal`, y `municipio_dane` pasa a ser opcional.
+- El `segmento` —que en Medellín es el código sectorial del predio— pasa a ser, para la renta, los dos últimos dígitos del NIT. La misma columna sirve para ambos.
+- `app.proximo_vencimiento_calendario()` acepta municipio nulo como «calendario nacional».
 
-Lo mismo que D1, más:
+Sembrado el calendario completo del año gravable 2025: **los 100 dígitos**, del 12 de agosto al 26 de octubre de 2026, según el [calendario tributario oficial de la DIAN](https://www.dian.gov.co/Calendarios/Calendario_Tributario_2026.pdf).
 
-- El usuario declara los dos últimos dígitos de su NIT. Es un dato personal más y necesita su tratamiento.
-- Una carga anual de las fechas del calendario tributario, que alguien tiene que hacer y mantener.
-- Decidir qué hace el sistema cuando llega el año siguiente y el calendario aún no está cargado. Callarse es mejor que avisar mal.
+Antes de sembrar se comprobó que la tabla leída del PDF era coherente: 50 pares cubriendo 100 dígitos exactos, fechas estrictamente crecientes, ninguna en fin de semana, y los únicos días hábiles omitidos del rango son el 17 de agosto y el 12 de octubre —festivos en Colombia— más el 29 y 30 de septiembre, que la DIAN dejó sin asignar.
 
-### Mientras tanto
+Verificado en `db/pruebas/renta.sql`, once comprobaciones.
 
-Igual que D1: que el usuario declare su fecha, o retirar la entrada.
+### Lo que queda advertido
+
+**El decreto se expide cada año.** Igual que con el predial, este calendario solo cubre 2026 y el sistema se queda sin fechas después.
+
+**Las excepciones territoriales no están cargadas.** El Decreto 1226 del 18 de agosto de 2026 fijó plazos especiales para contribuyentes de seis departamentos afectados por el terremoto del 10 de agosto de 2026. Un usuario de esas zonas tiene una fecha distinta a la que muestra el sistema. Es el mejor recordatorio de que un calendario cargado puede dejar de ser cierto sin previo aviso.
+
+**Los dos últimos dígitos del NIT son un dato personal** que el usuario tendrá que declarar, y entra bajo el mismo régimen de tratamiento que el resto.
+
+### Un aviso sobre las fuentes secundarias
+
+Varias publicaciones especializadas citaban el **Decreto 2229 de 2023** como norma de plazos para el año gravable 2025, lo que no cuadra con que se expida un decreto por año. Y una lectura automática del micrositio de la DIAN devolvió una tabla de diez fechas que empezaba el 8 de agosto, cuando el plazo empieza el 12 y reparte dos dígitos por día hábil. Ninguna de las dos se usó: lo sembrado viene del PDF del calendario oficial.
 
 ---
 

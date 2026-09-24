@@ -73,9 +73,11 @@ SELECT CASE WHEN count(*) = 0 THEN 'ok    todo calendario cargado cita su norma'
 FROM calendario_tributario WHERE norma IS NULL OR btrim(norma) = '';
 
 -- --- Solo se marca verificado lo leido en la norma -------------------------
-SELECT CASE WHEN count(*) = 5 THEN 'ok    5 calendarios verificados contra fuente primaria'
+-- Acotado al predial: este fichero prueba los calendarios municipales. La
+-- renta tiene los suyos en db/pruebas/renta.sql.
+SELECT CASE WHEN count(*) = 5 THEN 'ok    5 calendarios de predial verificados contra fuente primaria'
             ELSE 'FALLA hay ' || count(*) || ' verificados; se esperaban 5' END
-FROM calendario_tributario WHERE verificado;
+FROM calendario_tributario WHERE verificado AND obligacion_codigo = 'hogar.predial';
 
 -- Nada cargado sin verificar: si aparece, alguien sembro datos de prensa.
 SELECT CASE WHEN count(*) = 0 THEN 'ok    no hay calendarios sin verificar'
@@ -111,6 +113,13 @@ SELECT CASE WHEN (SELECT descuento_pct FROM app.proximo_vencimiento_calendario(
 SELECT CASE WHEN count(DISTINCT modalidad) >= 2 AND count(*) = 5
             THEN 'ok    5 municipios con regimenes heterogeneos conviven'
             ELSE 'FALLA el modelo no esta soportando la variedad real' END
+FROM calendario_tributario WHERE anio = 2026 AND obligacion_codigo = 'hogar.predial';
+
+-- Municipal y nacional conviven sin estorbarse.
+SELECT CASE WHEN count(*) FILTER (WHERE ambito='municipal') = 5
+             AND count(*) FILTER (WHERE ambito='nacional')  = 1
+            THEN 'ok    calendarios municipales y nacionales conviven'
+            ELSE 'FALLA los ambitos se estan mezclando' END
 FROM calendario_tributario WHERE anio = 2026;
 
 -- --- Cobertura completa de Medellin ----------------------------------------

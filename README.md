@@ -36,7 +36,7 @@ No hay despliegue. Todo corre en la máquina de cada integrante.
 | `docs/backlog.md` | Qué falta por construir, en orden de dependencias |
 | `docs/modelo-datos.md` | Las decisiones de modelado y por qué |
 | `docs/deuda-conocida.md` | Lo que está mal a sabiendas |
-| `db/pruebas/rls.sql` | Verificación del aislamiento entre usuarios |
+| `db/pruebas/` | Verificaciones: aislamiento, calendarios de predial y de renta |
 | `CLAUDE.md` | Reglas del dominio que el código debe cumplir |
 
 ## Documentación del proyecto

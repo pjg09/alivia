@@ -69,13 +69,15 @@ Bandeja de correo: http://localhost:8025 · API de consulta: `http://localhost:8
 - Ningún secreto en el repositorio, ni siquiera de pruebas. `.env.example` lleva plantillas, no valores reales.
 - No inventar comandos de build o test que no existan todavía: este repositorio está empezando.
 
-## Verificar el aislamiento
+## Verificar
 
 ```bash
-psql "$DATABASE_URL" -f db/pruebas/rls.sql
+psql "$DATABASE_URL" -f db/pruebas/rls.sql         # 13 · aislamiento entre usuarios
+psql "$DATABASE_URL" -f db/pruebas/calendario.sql  # 18 · predial por municipio
+psql "$DATABASE_URL" -f db/pruebas/renta.sql       # 11 · renta por dígitos del NIT
 ```
 
-Trece comprobaciones. Cualquier línea que diga `FALLA` es un defecto. Correrlo después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario.
+Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario; las de calendario, al tocar fechas o la función que las resuelve.
 
 ## Estado actual
 
@@ -93,4 +95,6 @@ Al tomar la siguiente tarea, leer su fila del backlog: la columna «Hecho cuando
 
 El orden del backlog se comprueba con `python3 scripts/verificar-backlog.py`. Si se añaden o reordenan tareas, ese script tiene que seguir pasando.
 
-**Antes de construir sobre el modelo de datos**, conocer D1 y D2 de `docs/deuda-conocida.md`: el impuesto predial y la declaración de renta **hoy se calculan mal**, y son dos de las cinco obligaciones emblema del producto.
+**D1 y D2 están resueltos**: el predial y la declaración de renta se calculan contra el calendario que fija la norma, no contra una fecha base inventada. Lo que queda son deudas de datos, no de modelo — ver `docs/deuda-conocida.md`.
+
+**Lo que hay que tener presente al construir encima:** los calendarios cargados solo cubren **2026**. Los decretos se expiden cada año hacia diciembre, así que el sistema se queda sin fechas en enero salvo que alguien las recargue.
