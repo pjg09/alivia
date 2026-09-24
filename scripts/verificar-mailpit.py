@@ -9,6 +9,7 @@ verificado antes de construir encima.
 """
 import email.utils
 import json
+import os
 import smtplib
 import sys
 import time
@@ -17,8 +18,11 @@ import urllib.parse
 import urllib.request
 from email.message import EmailMessage
 
-SMTP = ("localhost", 1025)
-API = "http://localhost:8025/api/v1"
+# Del entorno, con los mismos valores por defecto que publica el compose.
+# Fijarlos en el codigo significaba probar contra la bandeja equivocada cuando
+# los puertos se mueven.
+SMTP = (os.environ.get("SMTP_HOST", "localhost"), int(os.environ.get("SMTP_PUERTO", "1025")))
+API = os.environ.get("MAILPIT_API", "http://localhost:8025/api/v1")
 
 
 def api(path, metodo="GET"):

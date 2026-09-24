@@ -4,7 +4,26 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-[ -f .env ] && set -a && . ./.env && set +a
+# El .env aporta valores por defecto; NO pisa lo que ya venga del entorno.
+# Sin esto, un .env montado dentro de un contenedor sobrescribe la URL que le
+# pasa docker compose --cuyo anfitrion es «postgres»-- por la de «localhost»,
+# que dentro de la red de contenedores no resuelve, y la conexion falla.
+cargar_env() {
+  [ -f .env ] || return 0
+  while IFS= read -r linea || [ -n "$linea" ]; do
+    case "$linea" in ''|'#'*) continue ;; esac
+    nombre="${linea%%=*}"
+    case "$nombre" in [A-Za-z_][A-Za-z0-9_]*) ;; *) continue ;; esac
+    [ -n "${!nombre:-}" ] && continue
+    valor="${linea#*=}"
+    case "$valor" in
+      \"*\") valor="${valor#\"}"; valor="${valor%\"}" ;;
+      \'*\') valor="${valor#\'}"; valor="${valor%\'}" ;;
+    esac
+    export "$nombre=$valor"
+  done < .env
+}
+cargar_env
 
 URL="${DATABASE_URL_MIGRACIONES:-postgres://alivia_propietario:desarrollo@localhost:5434/alivia}"
 SEMILLAS=0
