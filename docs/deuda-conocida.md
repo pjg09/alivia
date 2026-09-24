@@ -152,15 +152,54 @@ La tecnomecánica pasa a ser **la primera entrada del catálogo con `fuente_veri
 
 ---
 
-## D4 · Ninguna fuente normativa está verificada
+## D4 · RESUELTO — Ninguna fuente normativa estaba verificada
 
-**Gravedad: media, y es el trabajo que le da valor al producto.**
+**Resuelto el 24 de septiembre de 2026.** Resultó ser una deuda de modelo, no de datos.
 
-De las 40 entradas del catálogo, **una sola** tiene `fuente_verificada = true`: la revisión técnico-mecánica, verificada al resolver [D3](#d3--resuelto--la-tecnomecánica-no-distinguía-carro-de-motocicleta). Las otras 39 siguen sin comprobar, y siete de las ocho sancionables tienen una fuente que dice literalmente «artículo sin verificar» o «pendiente».
+### Qué se encontró al ir a verificar
 
-El diferenciador declarado del producto es el catálogo curado con respaldo normativo. Hoy el respaldo no existe: hay una cita de la ley pero no el artículo, y nadie lo comprobó contra la norma.
+El alcance (§5.2) pide que cada obligación declare «la fuente normativa que respalda esa periodicidad». Al verificarlas una por una en el texto de cada norma, aparece que **para la mayoría esa fuente no existe**. El campo confundía tres cosas distintas:
 
-**Qué haría falta:** curaduría contra las fuentes primarias, y poner `fuente_verificada = true` solo en lo que efectivamente se comprobó.
+1. Qué norma hace la obligación **obligatoria**.
+2. Qué norma fija la **sanción** por incumplirla.
+3. Qué fija la **fecha** — y esto último muchas veces no es una norma.
+
+| Obligación | Obligatoriedad | Sanción | Quién fija la fecha |
+|---|---|---|---|
+| SOAT | Ley 769/2002, art. 42 | art. 131 **D.2**, 30 SMLDV | **La póliza.** El código de tránsito no menciona la vigencia anual |
+| Tecnomecánica | Ley 769/2002, arts. 51-52 | art. 131 **C.35**, 15 SMLDV | **La norma.** La única del catálogo entera |
+| Predial | Acuerdo municipal | Intereses de mora | **Calendario municipal** |
+| Renta | Estatuto Tributario | Extemporaneidad | **Calendario DIAN** |
+| Antirrábica | Decreto 2257/1986, arts. 33 y 55 | Autoridad sanitaria | **Lineamiento.** El decreto delega la periodicidad en los ministerios |
+| Servicios públicos | Ley 142/1994 | art. 140, suspensión | **La factura de cada empresa** |
+| Tarjeta de crédito | — | Contrato | **El contrato.** No hay norma |
+| Matrícula escolar | — | Reglamento | **Cada institución** |
+
+**De ocho obligaciones sancionables, sólo una tiene su plazo fijado por una norma.** Guardar todo eso en un campo llamado `fuente_normativa` obliga a mentir o a dejarlo vacío.
+
+### Dos datos rescatados
+
+Los literales **D.2** («conducir sin portar los seguros ordenados por la ley», 30 SMLDV) y **C.35** («no realizar la revisión técnico-mecánica en el plazo legal», 15 SMLDV) son los que `revision.md` de la Entrega 1 había **retirado del documento por venir de prensa**. Quedan confirmados en el texto del artículo 131, modificado por el artículo 21 de la Ley 1383 de 2010. Pueden volver al documento académico.
+
+### Cómo quedó resuelto
+
+Migración `012_fuentes_separadas.sql`:
+
+- `fuente_normativa` pasa a significar sólo «norma que hace la obligación obligatoria».
+- `fuente_sancion` recoge la norma o el contrato que fija la consecuencia.
+- `origen_plazo` dice de dónde sale la fecha: `norma`, `calendario`, `contrato`, `factura`, `institucion` o `practica`.
+- La restricción que exigía fuente normativa a toda sancionable **se reemplazó**: codificaba el supuesto falso. Ahora se exige que declare su consecuencia, que es lo que de verdad impide que se cuele una tarea doméstica disfrazada de obligación.
+
+Las ocho sancionables quedan con `fuente_verificada = true`, leídas en el Gestor Normativo de Función Pública. Las 32 recomendadas declaran `origen_plazo = 'practica'`: no tienen norma porque no hay sanción, y marcarlas como «sin verificar» sugeriría que existe algo que verificar.
+
+Verificado en `db/pruebas/fuentes.sql`, doce comprobaciones.
+
+### Lo que sigue sin verificar, y se declara
+
+- **La vigencia anual del SOAT.** Se sabe que la fija la póliza; no se localizó la norma que la establece.
+- **El monto de la multa por no vacunar contra la rabia.** Los «hasta $500.000» que circulan vienen de blogs.
+- **El artículo del Estatuto Tributario** que fija la sanción por extemporaneidad.
+- **La periodicidad anual del refuerzo antirrábico** sale de lineamiento del Ministerio de Salud, no del decreto. No se leyó el lineamiento.
 
 ---
 

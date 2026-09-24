@@ -27,6 +27,8 @@ UPDATE obligacion_catalogo
                           'cargado, la fecha la declara el usuario.'
  WHERE codigo = 'finanzas.renta';
 
+-- NOTA: la curaduría de fuentes continúa en 022_fuentes_verificadas.sql.
+
 -- --- D3 · la tecnomecánica depende del tipo de vehículo --------------------
 UPDATE obligacion_catalogo
    SET atributo_variante = 'tipo_vehiculo',

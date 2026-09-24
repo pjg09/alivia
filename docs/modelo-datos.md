@@ -113,7 +113,9 @@ La verificación de la contraseña ocurre en la aplicación, nunca en la base de
 
 Restricción `sancionable_exige_fuente`. Impide por construcción que se cuele una tarea doméstica presentada como obligación con consecuencia legal, que es el defecto que hoy tiene el catálogo heredado —«lavado y aspirado cada 14 días», «revisar pico y placa cada 7 días»—.
 
-`fuente_verificada` es un campo aparte, y **está en `false` en las 40 entradas sembradas**. Declarar lo que no se ha comprobado es más útil que presentarlo como comprobado.
+`fuente_verificada` es un campo aparte. Las **ocho obligaciones sancionables** están verificadas contra el texto de su norma; las 32 recomendadas no lo están porque no hay norma que verificar.
+
+Y hay una distinción que costó descubrir: **la norma que hace algo obligatorio casi nunca es la que fija su fecha**. El SOAT es obligatorio por el artículo 42 de la Ley 769, pero su vigencia anual la fija la póliza. El Decreto 2257 de 1986 obliga a vacunar contra la rabia y delega expresamente la periodicidad en los ministerios. Por eso el catálogo separa `fuente_normativa`, `fuente_sancion` y `origen_plazo`, en lugar de meterlo todo en un campo que obligaría a mentir.
 
 ---
 
@@ -121,7 +123,7 @@ Restricción `sancionable_exige_fuente`. Impide por construcción que se cuele u
 
 Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para resolver cada una. No se repiten aquí para que no haya dos versiones que se contradigan.
 
-**D1, D2 y D3 quedaron saldados.** Lo que sigue abierto son D4, D5 y D6: carga de datos y alcance declarado, nada estructural.
+**D1 a D4 quedaron saldados.** Lo que sigue abierto son D5 y D6: una mejora barata y alcance declarado, nada estructural.
 
 ### 2.13 Hay tres formas de saber cuándo vence algo
 
@@ -154,6 +156,7 @@ psql "$DATABASE_URL" -f db/pruebas/rls.sql
 psql "$DATABASE_URL" -f db/pruebas/calendario.sql
 psql "$DATABASE_URL" -f db/pruebas/renta.sql
 psql "$DATABASE_URL" -f db/pruebas/variantes.sql
+psql "$DATABASE_URL" -f db/pruebas/fuentes.sql
 ```
 
-Trece comprobaciones de aislamiento, dieciocho de calendario municipal, once de renta y doce de variantes. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.
+Setenta comprobaciones en total: trece de aislamiento, dieciocho de calendario municipal, once de renta, dieciséis de variantes y doce de fuentes. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.

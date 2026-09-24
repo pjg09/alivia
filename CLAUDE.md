@@ -77,7 +77,8 @@ Bandeja de correo: http://localhost:8025 · API de consulta: `http://localhost:8
 psql "$DATABASE_URL" -f db/pruebas/rls.sql         # 13 · aislamiento entre usuarios
 psql "$DATABASE_URL" -f db/pruebas/calendario.sql  # 18 · predial por municipio
 psql "$DATABASE_URL" -f db/pruebas/renta.sql       # 11 · renta por dígitos del NIT
-psql "$DATABASE_URL" -f db/pruebas/variantes.sql   # 12 · tecnomecánica por tipo de vehículo
+psql "$DATABASE_URL" -f db/pruebas/variantes.sql   # 16 · tecnomecánica por tipo de vehículo
+psql "$DATABASE_URL" -f db/pruebas/fuentes.sql     # 12 · respaldo de cada obligación
 ```
 
 Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario; las de calendario, al tocar fechas o la función que las resuelve.
@@ -98,6 +99,8 @@ Al tomar la siguiente tarea, leer su fila del backlog: la columna «Hecho cuando
 
 El orden del backlog se comprueba con `python3 scripts/verificar-backlog.py`. Si se añaden o reordenan tareas, ese script tiene que seguir pasando.
 
-**D1, D2 y D3 están resueltos**: el predial y la renta se calculan contra el calendario que fija la norma, y la tecnomecánica distingue carro de moto. Lo que queda son deudas de datos, no de modelo — ver `docs/deuda-conocida.md`.
+**D1 a D4 están resueltos.** El predial y la renta se calculan contra el calendario que fija la norma, la tecnomecánica distingue carro de moto, y cada obligación declara de dónde sale su fecha. Queda D5 (barata) y D6 (fuera de alcance) — ver `docs/deuda-conocida.md`.
+
+**Una distinción que cuesta ver y hay que respetar:** la norma que hace algo obligatorio casi nunca es la que fija su fecha. El SOAT es obligatorio por ley y su vigencia anual la fija la póliza. Por eso el catálogo tiene `fuente_normativa`, `fuente_sancion` y `origen_plazo` separados. **No presentar como legal un plazo que sale de un contrato o de una factura.**
 
 **Lo que hay que tener presente al construir encima:** los calendarios cargados solo cubren **2026**. Los decretos se expiden cada año hacia diciembre, así que el sistema se queda sin fechas en enero salvo que alguien las recargue.

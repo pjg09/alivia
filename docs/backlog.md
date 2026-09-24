@@ -19,7 +19,7 @@ Si alguien añade o reordena tareas, ese script tiene que seguir pasando.
 | Hecho cuando | La condición que decide si está terminada. Si no se puede comprobar, no es un criterio |
 | Dep. | Tareas que deben estar terminadas antes. Siempre números menores |
 
-**Lo que ya está hecho** y por eso no aparece aquí: ambiente de contenedores, las once migraciones del esquema, el catálogo sembrado con 40 entradas, las deudas D1, D2 y D3 saldadas, y las verificaciones de `db/pruebas/`.
+**Lo que ya está hecho** y por eso no aparece aquí: ambiente de contenedores, las doce migraciones del esquema, el catálogo sembrado con 40 entradas y sus 8 obligaciones sancionables verificadas contra la norma, las deudas D1 a D4 saldadas, y las verificaciones de `db/pruebas/`.
 
 **Paralelismo.** Son cuatro personas. Dos tareas con el mismo número en `Dep.` y sin relación entre sí pueden ir a la vez; el grafo de dependencias es lo que dice qué se puede repartir, no la numeración.
 
@@ -150,7 +150,7 @@ El alcance pide no gastar esfuerzo en decoración, con una excepción declarada:
 | 60 | Canal de consultas y reclamos del titular | Existe una vía documentada para ejercer los derechos de la ley, con sus plazos declarados | 58 |
 | 61 | Carga del calendario tributario de **2027**, cuando se publique: predial de los municipios cubiertos y renta de la DIAN | El sistema deja de quedarse sin fechas en enero. Los decretos se expiden hacia diciembre del año anterior | 20, 49 |
 | 62 | Deuda D5: ventana de anticipación propia por obligación, no solo por usuario | Se puede pedir 30 días para el SOAT y 3 para el pago de una tarjeta | 23 |
-| 63 | Deuda D4: curaduría de las fuentes normativas del catálogo **y carga de los cinco municipios del Valle de Aburrá que faltan** (Bello, Envigado, Itagüí, La Estrella, Caldas) | Solo lo comprobado contra la norma queda marcado como verificado. Los calendarios se leen de su resolución, no de prensa | 17 |
+| 63 | Carga de los cinco municipios del Valle de Aburrá que faltan (Bello, Envigado, Itagüí, La Estrella, Caldas) | Cada calendario se lee de su resolución, no de prensa. Solo lo comprobado queda marcado como verificado | 17 |
 | 64 | Modelo de información documentado, derivado del esquema | Entregable 7 del alcance. Se genera del esquema real, no se redacta aparte | 61 |
 | 65 | Semillas de demostración y guion de sustentación | Un comando deja la base en un estado que permite recorrer el producto entero delante de un jurado | 36, 43, 56 |
 | 66 | Repaso final contra las seis reglas duras de `CLAUDE.md` | Cada regla tiene una prueba que la respalda, o una explicación de por qué no la tiene | 65 |
