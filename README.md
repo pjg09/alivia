@@ -13,12 +13,21 @@ Todo lo que se construye aquí se mide contra eso.
 Requisitos: Docker y Node 22 o superior. La integración continua usa Node 24.
 
 ```bash
-cp .env.example .env          # ajustar JWT_SECRETO
-docker compose up -d          # PostgreSQL + Mailpit
-./db/aplicar.sh               # migraciones
-./db/aplicar.sh --semillas    # catálogo base y usuarios de prueba
+npm run arrancar              # y ya: base de datos, esquema, catálogo y correo
 ./scripts/verificar-todo.sh   # comprobar que todo quedó bien
 ```
+
+**En cualquier máquina, sin pasos manuales después.** No hace falta `.env`: los valores por defecto están en el propio compose. Se copia `.env.example` a `.env` solo para apartarse de ellos.
+
+`npm run arrancar` es exactamente esto, y se puede escribir a mano:
+
+```bash
+docker compose up -d --wait && docker compose wait migraciones
+```
+
+Son dos órdenes porque `up --wait` espera a que los servicios estén *sanos o corriendo*, y a un servicio que corre, termina y sale —como el que aplica las migraciones— le basta con haber arrancado: devuelve antes de que acabe. Está medido, y está explicado en [`docs/ambiente.md`](docs/ambiente.md).
+
+Eso no es una buena intención, es un contrato comprobado: la integración continua arranca con este mismo fichero y `scripts/verificar-arranque.py` se pone rojo si el compose se queda atrás del código.
 
 | Servicio | Dónde | Para qué |
 |---|---|---|
@@ -34,6 +43,7 @@ No hay despliegue. Todo corre en la máquina de cada integrante.
 |---|---|
 | `db/migraciones/` | Esquema, en orden. Fuente de verdad del modelo de datos |
 | `db/semillas/` | Catálogo base y datos de prueba |
+| `docs/ambiente.md` | El contrato del arranque con un solo comando |
 | `CONTRIBUTING.md` | Flujo de trabajo y convención de commits |
 | `docs/backlog.md` | Qué falta por construir, en orden de dependencias |
 | `docs/modelo-datos.md` | Las decisiones de modelado y por qué |

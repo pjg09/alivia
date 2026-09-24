@@ -20,7 +20,8 @@ from email.message import EmailMessage
 
 # Del entorno, con los mismos valores por defecto que publica el compose.
 # Fijarlos en el codigo significaba probar contra la bandeja equivocada cuando
-# los puertos se mueven.
+# los puertos se mueven; scripts/verificar-arranque.py vigila que no vuelvan
+# a divergir.
 SMTP = (os.environ.get("SMTP_HOST", "localhost"), int(os.environ.get("SMTP_PUERTO", "1025")))
 API = os.environ.get("MAILPIT_API", "http://localhost:8025/api/v1")
 
@@ -43,7 +44,7 @@ def main() -> int:
         api("/messages?limit=1")
     except (urllib.error.URLError, OSError) as e:
         print(f"No se pudo hablar con Mailpit en {API}: {e}")
-        print("¿Esta levantado? docker compose up -d")
+        print("¿Esta levantado? npm run arrancar")
         return 1
 
     # Bandeja limpia, para que el recuento signifique algo.

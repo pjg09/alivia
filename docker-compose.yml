@@ -1,27 +1,63 @@
-# Ambiente local completo: base de datos y correo. Nada sale a internet.
-# Arranque:  docker compose up -d  &&  ./db/aplicar.sh
+# Ambiente completo de Alivia. Nada sale a internet.
+#
+#     docker compose up -d --wait && docker compose wait migraciones
+#
+# Esa línea, sola, tiene que dejar el proyecto utilizable en una máquina recién
+# clonada: base de datos, esquema aplicado, catálogo sembrado y correo. No hay
+# pasos manuales después, y no hace falta ningún .env para arrancar. Tambien
+# esta como `npm run arrancar`.
+#
+# POR QUÉ SON DOS ÓRDENES Y NO UNA. `up --wait` espera a que los servicios
+# estén *sanos o corriendo*, y un servicio que corre, termina y sale --como
+# `migraciones`-- le vale con haber arrancado. Comprobado: con un efímero de 12
+# segundos, `up --wait` devolvió 0 a los 6, con el contenedor todavía dentro.
+# Las pruebas corrían entonces contra una base a medio poblar y fallaban de
+# forma intermitente, que es la peor clase de fallo. `compose wait migraciones`
+# bloquea hasta que termina y devuelve su código de salida.
+#
+# `up --wait` sí detecta que el efímero salió con error (devuelve 1), y un `up`
+# posterior lo vuelve a ejecutar, así que las migraciones nuevas se aplican
+# sobre una pila ya levantada. Lo único que no hace es esperar al éxito.
+#
+# REGLA: este fichero levanta TODO lo que compone la aplicación. Cuando se
+# añade una pieza que corre (servidor, interfaz, proceso de avisos), se añade
+# aquí en el mismo cambio. El contrato de lo que debe declarar cada servicio
+# está en docs/ambiente.md y lo comprueba scripts/verificar-arranque.py, que
+# entra solo en la integración continua. Un servicio que no esté aquí es un
+# servicio que el resto del equipo no tiene.
+
+name: alivia
 
 services:
   postgres:
     image: postgres:16
     container_name: alivia-postgres
+    labels:
+      # Qué rol de base de datos usa este servicio. Lo exige
+      # scripts/verificar-arranque.py y sostiene la regla 1 de CLAUDE.md:
+      # el día que exista el servidor, conectarlo como propietario deja de ser
+      # un descuido silencioso y pasa a ser una prueba en rojo.
+      alivia.rol-bd: motor
     environment:
       POSTGRES_DB: alivia
       POSTGRES_USER: alivia_propietario
-      POSTGRES_PASSWORD: desarrollo
+      POSTGRES_PASSWORD: ${POSTGRES_CONTRASENA:-desarrollo}
       # Fechas y ordenamiento coherentes con el dominio colombiano.
       TZ: America/Bogota
       PGTZ: America/Bogota
     ports:
-      - "5434:5432"   # 5432 y 5433 suelen estar ocupados por otros proyectos
+      # 5432 y 5433 suelen estar ocupados por otros proyectos. El puerto
+      # publicado se puede mover sin tocar este fichero:
+      #     PUERTO_POSTGRES=5440 npm run arrancar
+      - "${PUERTO_POSTGRES:-5434}:5432"
     volumes:
       - datos_postgres:/var/lib/postgresql/data
     healthcheck:
       # -h 127.0.0.1 no es adorno. Durante la inicialización, el entrypoint de
       # postgres levanta un servidor temporal que escucha SOLO en el socket
       # unix; `pg_isready` sin -h lo encuentra y declara la base sana cuando
-      # todavía no acepta conexiones TCP, así que lo que dependa de ella
-      # arranca contra un puerto cerrado. Por TCP, «sano» significa lo que dice.
+      # todavía no acepta conexiones TCP. `migraciones` arrancaba entonces
+      # contra un puerto cerrado. Por TCP, «sano» significa lo que dice.
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U alivia_propietario -d alivia"]
       interval: 5s
       timeout: 5s
@@ -35,13 +71,45 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
     ports:
-      - "1025:1025"   # SMTP: aqui escribe la aplicacion
-      - "8025:8025"   # Interfaz web y API de consulta
+      - "${PUERTO_SMTP:-1025}:1025"   # SMTP: aquí escribe la aplicación
+      - "${PUERTO_MAILPIT:-8025}:8025"   # Interfaz web y API de consulta
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # Aplica migraciones y semillas y termina. Es lo que convierte «hay una base
+  # vacía» en «hay un proyecto utilizable», y por eso vive aquí y no en un
+  # comando que cada quien tiene que acordarse de correr.
+  #
+  # Al ser efímero, `up --wait` no espera a que acabe: hay que esperarlo con
+  # `docker compose wait migraciones`. Lo vigila scripts/verificar-arranque.py,
+  # que exige que el comando de arranque documentado espere a cada efímero.
+  #
+  # Monta solo ./db a propósito: montar el repositorio entero traería el .env
+  # de la máquina, cuyas URLs apuntan a localhost y no resuelven dentro de la
+  # red de contenedores.
+  migraciones:
+    image: postgres:16
+    container_name: alivia-migraciones
+    labels:
+      alivia.rol-bd: propietario   # aplicar el esquema es lo único que lo justifica
+      alivia.efimero: "true"       # corre, termina y sale; por eso no lleva healthcheck
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Dentro de la red de compose el anfitrión es «postgres», no «localhost»,
+      # y el puerto es el interno 5432, no el publicado.
+      DATABASE_URL_MIGRACIONES: postgres://alivia_propietario:${POSTGRES_CONTRASENA:-desarrollo}@postgres:5432/alivia
+      TZ: America/Bogota
+      PGTZ: America/Bogota
+    volumes:
+      - ./db:/alivia/db:ro
+    entrypoint: ["/alivia/db/aplicar.sh"]
+    command: ["--semillas"]
+    restart: "no"
 
 volumes:
   datos_postgres:

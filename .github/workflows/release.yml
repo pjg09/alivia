@@ -26,38 +26,14 @@ jobs:
     # no algo que ocurra un martes cualquiera.
     runs-on: ubuntu-24.04
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: alivia
-          POSTGRES_USER: alivia_propietario
-          POSTGRES_PASSWORD: desarrollo
-          TZ: America/Bogota
-          PGTZ: America/Bogota
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U alivia_propietario -d alivia"
-          --health-interval 5s --health-timeout 5s --health-retries 10
-
-      mailpit:
-        image: axllent/mailpit:latest
-        env:
-          MP_SMTP_AUTH_ACCEPT_ANY: 1
-          MP_SMTP_AUTH_ALLOW_INSECURE: 1
-        ports: ["1025:1025", "8025:8025"]
-        options: >-
-          --health-cmd "/mailpit readyz"
-          --health-interval 5s --health-timeout 5s --health-retries 10
-
-    env:
-      DATABASE_URL: postgres://alivia_app:desarrollo@localhost:5432/alivia
-      DATABASE_URL_AVISOS: postgres://alivia_avisos:desarrollo@localhost:5432/alivia
-      DATABASE_URL_MIGRACIONES: postgres://alivia_propietario:desarrollo@localhost:5432/alivia
-      SMTP_HOST: localhost
-      SMTP_PUERTO: "1025"
-      MAILPIT_API: http://localhost:8025/api/v1
-
+    # Este trabajo arranca el proyecto EXACTAMENTE como lo arranca cualquiera
+    # de las cuatro máquinas: con docker-compose.yml y nada más.
+    #
+    # Antes montaba su propio ambiente con `services:` de GitHub Actions, que
+    # era una segunda copia de la misma verdad. Ya había derivado: declaraba el
+    # puerto 5432 mientras .env.example declaraba 5434. Con un solo ambiente,
+    # un compose roto pone la CI en rojo y no se publica versión, que es la
+    # única forma de que el fichero no se pudra.
     steps:
       - uses: actions/checkout@v7
 
@@ -69,8 +45,12 @@ jobs:
       - name: Instalar dependencias
         run: npm ci || npm install
 
-      - name: Aplicar el esquema desde cero
-        run: ./db/aplicar.sh --semillas
+      # La misma línea que corre cualquiera de las cuatro máquinas. Son dos
+      # órdenes porque `up --wait` da por bueno un servicio efímero con que haya
+      # arrancado: sin el `compose wait`, las pruebas corren contra una base a
+      # medio poblar y fallan de forma intermitente. Ver docs/ambiente.md.
+      - name: Levantar el ambiente
+        run: docker compose up -d --wait && docker compose wait migraciones
 
       # Un solo paso a propósito. Las pruebas se descubren por dónde están
       # --db/pruebas/*.sql, scripts/verificar-*.py y npm test--, así que una
@@ -78,6 +58,10 @@ jobs:
       # garantizaba que tarde o temprano alguien añadiría una que nadie corre.
       - name: Correr todas las pruebas
         run: ./scripts/verificar-todo.sh
+
+      - name: Registro de los contenedores si algo falló
+        if: failure()
+        run: docker compose logs --no-color --tail 200
 
   publicar:
     name: Publicar

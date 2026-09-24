@@ -16,7 +16,7 @@ La diferencia con cualquier gestor de tareas es que Alivia **llega con el calend
 
 Una funcionalidad que no contribuya a eso compite por el tiempo del equipo con una que sí. Ante una disyuntiva de diseño, gana la opción que hace más probable que el aviso llegue a tiempo.
 
-## Las seis reglas duras
+## Las siete reglas duras
 
 No son preferencias. Cada una viene de un defecto real del prototipo que se descartó, o de una restricción del alcance. Romperlas es reconstruir el error.
 
@@ -37,6 +37,11 @@ No son preferencias. Cada una viene de un defecto real del prototipo que se desc
 4. **Las obligaciones recurrentes se reprograman solas.** Al marcar cumplida una ocurrencia se genera la siguiente. La periodicidad se guarda para usarse.
 5. **El acceso a módulos de pago se verifica en el servidor.** Con `app.tiene_acceso()`, aplicado en las políticas RLS. Una comprobación en la interfaz no es una verificación.
 6. **Nada se destruye sin confirmación explícita.** Desactivar un módulo suspende el acceso, no borra datos. Se usa archivado lógico.
+7. **El compose levanta todo, y se actualiza en el mismo cambio que crea la pieza.** `npm run arrancar` tiene que dejar el proyecto utilizable en una máquina recién clonada, sin pasos manuales y sin `.env`. Una pieza que corre —servidor, interfaz, proceso de avisos— y no está en `docker-compose.yml` es una pieza que los demás no tienen.
+
+   **No confiar en esta regla escrita: confiar en que se pone roja.** `scripts/verificar-arranque.py` la comprueba y entra solo en `verificar-todo.sh`; la integración continua arranca con este mismo compose, así que un compose roto deja de publicar versión. El contrato de qué debe declarar cada servicio está en `docs/ambiente.md`.
+
+   Esta regla también viene de un defecto real, y de este repositorio: la CI montaba su propio ambiente en el puerto 5432 mientras `.env.example` declaraba 5434. Dos copias de la misma verdad, divergiendo en silencio, sin nada en rojo.
 
 ## Dos cosas que no son obvias y hay que respetar
 
@@ -47,14 +52,22 @@ No son preferencias. Cada una viene de un defecto real del prototipo que se desc
 
 PostgreSQL 16 con RLS · Node.js + Express + TypeScript · React + Vite + TypeScript · Mailpit para correo · todo en contenedores locales.
 
-**No hay despliegue.** El ambiente de desarrollo es el único ambiente. Por eso `docker compose up -d` tiene que bastar y las migraciones tienen que aplicar desde cero.
+**No hay despliegue.** El ambiente de desarrollo es el único ambiente. Por eso `npm run arrancar` tiene que bastar —regla 7— y las migraciones tienen que aplicar desde cero.
 
 Supabase, Vercel, Railway y Resend aparecen en la documentación académica como *arquitectura de despliegue prevista*. No son dependencias de este código y no hay que instalarlas.
 
 ## Comandos
 
 ```bash
-docker compose up -d          # PostgreSQL + Mailpit
+npm run arrancar              # TODO el ambiente: servicios, esquema y semillas
+docker compose down -v        # destruye el volumen de PostgreSQL
+```
+
+`npm run arrancar` es `docker compose up -d --wait && docker compose wait migraciones`. Son dos órdenes por una razón medida: `up --wait` da por bueno un servicio efímero con que haya *arrancado*, así que devuelve antes de que las migraciones terminen y las pruebas corren contra una base a medio poblar. `compose wait` espera de verdad. Está en `docs/ambiente.md`.
+
+Ese es el único arranque; los de abajo son para trabajar sobre una base ya levantada.
+
+```bash
 ./db/aplicar.sh               # aplicar migraciones pendientes
 ./db/aplicar.sh --semillas    # catálogo base y usuarios de prueba
 ./db/aplicar.sh --reiniciar   # destruir y recrear el esquema (pide confirmación)
@@ -122,7 +135,8 @@ Hay ambiente, esquema y catálogo sembrado. **No hay aplicación todavía**: ni 
 
 | Documento | Para qué |
 |---|---|
-| `docs/backlog.md` | **Qué hacer y en qué orden.** 66 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
+| `docs/backlog.md` | **Qué hacer y en qué orden.** 69 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
+| `docs/ambiente.md` | El contrato del arranque con un solo comando, y qué debe declarar cada servicio nuevo |
 | `docs/modelo-datos.md` | Por qué el esquema es como es |
 | `docs/deuda-conocida.md` | Lo que estuvo mal a sabiendas y cómo se corrigió. Aquí se anota lo que se descubra después |
 | `CONTRIBUTING.md` | Flujo de trabajo y convención de commits |

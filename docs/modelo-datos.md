@@ -162,7 +162,7 @@ Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para re
 ## 4. Cómo se verifica
 
 ```bash
-docker compose up -d
+npm run arrancar
 ./db/aplicar.sh --reiniciar && ./db/aplicar.sh --semillas
 psql "$DATABASE_URL" -f db/pruebas/rls.sql
 psql "$DATABASE_URL" -f db/pruebas/calendario.sql

@@ -153,7 +153,7 @@ El alcance pide no gastar esfuerzo en decoración, con una excepción declarada:
 | 63 | Carga de los cinco municipios del Valle de Aburrá que faltan (Bello, Envigado, Itagüí, La Estrella, Caldas) | Cada calendario se lee de su resolución, no de prensa. Solo lo comprobado queda marcado como verificado | 17 |
 | 64 | Modelo de información documentado, derivado del esquema | Entregable 7 del alcance. Se genera del esquema real, no se redacta aparte | 61 |
 | 65 | Semillas de demostración y guion de sustentación | Un comando deja la base en un estado que permite recorrer el producto entero delante de un jurado | 36, 43, 56 |
-| 66 | Repaso final contra las seis reglas duras de `CLAUDE.md` | Cada regla tiene una prueba que la respalda, o una explicación de por qué no la tiene | 65 |
+| 66 | Repaso final contra las siete reglas duras de `CLAUDE.md` | Cada regla tiene una prueba que la respalda, o una explicación de por qué no la tiene | 65 |
 
 ---
 

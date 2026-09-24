@@ -98,6 +98,14 @@ BREAKING CHANGE: fuente_normativa deja de significar "lo que fija la fecha".
 
 **Nada de coautoría ni enlaces de sesión de herramientas de IA.** Ni `Co-Authored-By:`, ni referencias a la sesión que generó el cambio. El historial registra qué cambió y por qué, no con qué se escribió.
 
+## El ambiente se actualiza en el mismo cambio
+
+**Si el cambio añade una pieza que corre, el cambio añade su servicio a `docker-compose.yml`.** No en un envío posterior, no «cuando esté más estable»: en el mismo. El contrato es que `npm run arrancar` deje el proyecto utilizable en una máquina recién clonada, y una pieza que no está ahí es una pieza que los otros tres no tienen.
+
+No hace falta acordarse. `scripts/verificar-arranque.py` se pone rojo en cuanto exista un directorio con `package.json` o `Dockerfile` que ningún servicio construya, y la integración continua arranca con ese mismo compose, así que un compose incompleto no publica versión.
+
+Qué tiene que declarar un servicio nuevo —healthcheck, rol de base de datos, puerto movible— está en [`docs/ambiente.md`](docs/ambiente.md). Es la regla 7 de `CLAUDE.md`.
+
 ## Pruebas
 
 **Todas las pruebas se corren en cada envío a `main`, y ninguna versión se publica si alguna falla.** El trabajo de publicación depende del de verificación y no hay forma de saltárselo.
@@ -156,8 +164,15 @@ Cada envío a `main` dispara el flujo de `.github/workflows/release.yml`, que ej
 ### Verificar antes de subir
 
 ```bash
+./scripts/verificar-todo.sh                        # ¿está todo en verde?
 npx commitlint --from HEAD~1 --to HEAD --verbose   # ¿el mensaje cumple?
 npx semantic-release --dry-run                     # ¿qué versión saldría?
+```
+
+Y si el cambio tocó el ambiente, desde cero, que es lo que verá la CI:
+
+```bash
+docker compose down -v && docker compose up -d --wait && docker compose wait migraciones && ./scripts/verificar-todo.sh
 ```
 
 ## Historia anterior a la convención
