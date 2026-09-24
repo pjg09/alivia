@@ -21,7 +21,10 @@ permissions:
 jobs:
   verificar:
     name: Verificar
-    runs-on: ubuntu-latest
+    # Fijada a propósito: ubuntu-latest migra a Ubuntu 26 el 19 de octubre de
+    # 2026, en mitad del desarrollo. Subir de versión debe ser una decisión,
+    # no algo que ocurra un martes cualquiera.
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
@@ -56,11 +59,11 @@ jobs:
       MAILPIT_API: http://localhost:8025/api/v1
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Instalar dependencias
@@ -79,7 +82,7 @@ jobs:
   publicar:
     name: Publicar
     needs: verificar        # sin esto, se publicaría con las pruebas en rojo
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: write       # etiquetas, publicaciones y el commit del historial
@@ -87,16 +90,16 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # semantic-release necesita toda la historia y las etiquetas para
           # saber desde dónde analizar.
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Instalar dependencias

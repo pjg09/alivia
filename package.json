@@ -5,7 +5,7 @@
   "description": "Plataforma de recordatorios de las obligaciones de la vida adulta en Colombia",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "verificar:backlog": "python3 scripts/verificar-backlog.py",

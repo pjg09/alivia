@@ -10,7 +10,7 @@ Todo lo que se construye aquí se mide contra eso.
 
 ## Arrancar el ambiente
 
-Requisitos: Docker, Node 20 o superior.
+Requisitos: Docker y Node 22 o superior. La integración continua usa Node 24.
 
 ```bash
 cp .env.example .env          # ajustar JWT_SECRETO
