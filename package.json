@@ -1,0 +1,24 @@
+{
+  "name": "alivia",
+  "version": "0.0.0-gestionado-por-semantic-release",
+  "private": true,
+  "description": "Plataforma de recordatorios de las obligaciones de la vida adulta en Colombia",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "verificar:backlog": "python3 scripts/verificar-backlog.py",
+    "verificar:mailpit": "python3 scripts/verificar-mailpit.py",
+    "verificar:commits": "commitlint --from HEAD~1 --to HEAD --verbose",
+    "version:simular": "semantic-release --dry-run"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "conventional-changelog-conventionalcommits": "^8.0.0",
+    "semantic-release": "^24.2.0"
+  }
+}

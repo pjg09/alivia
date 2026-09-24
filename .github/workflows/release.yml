@@ -1,0 +1,115 @@
+name: Publicar versión
+
+# Cada envío a main. La versión la deciden los mensajes de commit, según la
+# convención de CONTRIBUTING.md. Si ningún commit es feat, fix, perf, refactor
+# o revert, no se publica nada y eso es lo normal.
+on:
+  push:
+    branches: [main]
+
+# Dos envíos seguidos no deben publicar a la vez: el segundo espera.
+concurrency:
+  group: publicar-version
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Verificar
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: alivia
+          POSTGRES_USER: alivia_propietario
+          POSTGRES_PASSWORD: desarrollo
+          TZ: America/Bogota
+          PGTZ: America/Bogota
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U alivia_propietario -d alivia"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+      mailpit:
+        image: axllent/mailpit:latest
+        env:
+          MP_SMTP_AUTH_ACCEPT_ANY: 1
+          MP_SMTP_AUTH_ALLOW_INSECURE: 1
+        ports: ["1025:1025", "8025:8025"]
+
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      DATABASE_URL_MIGRACIONES: postgres://alivia_propietario:desarrollo@localhost:5432/alivia
+      URL_APP: postgres://alivia_app:desarrollo@localhost:5432/alivia
+      URL_PROPIETARIO: postgres://alivia_propietario:desarrollo@localhost:5432/alivia
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Aplicar el esquema desde cero
+        run: ./db/aplicar.sh --semillas
+
+      - name: Comprobar el aislamiento entre usuarios
+        run: psql "$URL_APP" -v ON_ERROR_STOP=1 -f db/pruebas/rls.sql | tee /tmp/rls.txt
+      - name: Comprobar los calendarios de predial
+        run: psql "$URL_APP" -v ON_ERROR_STOP=1 -f db/pruebas/calendario.sql | tee /tmp/cal.txt
+      - name: Comprobar el calendario de renta
+        run: psql "$URL_APP" -v ON_ERROR_STOP=1 -f db/pruebas/renta.sql | tee /tmp/renta.txt
+      - name: Comprobar las variantes de obligación
+        run: psql "$URL_APP" -v ON_ERROR_STOP=1 -f db/pruebas/variantes.sql | tee /tmp/var.txt
+      - name: Comprobar el respaldo de cada obligación
+        run: psql "$URL_PROPIETARIO" -v ON_ERROR_STOP=1 -f db/pruebas/fuentes.sql | tee /tmp/fuentes.txt
+      - name: Comprobar la ventana de anticipación
+        run: psql "$URL_APP" -v ON_ERROR_STOP=1 -f db/pruebas/anticipacion.sql | tee /tmp/ant.txt
+
+      # Las pruebas SQL no devuelven código de error: imprimen "FALLA". Sin este
+      # paso, una comprobación en rojo pasaría desapercibida y se publicaría igual.
+      - name: Fallar si alguna comprobación salió en rojo
+        run: |
+          if grep -rh "FALLA" /tmp/*.txt; then
+            echo "::error::Hay comprobaciones en rojo"
+            exit 1
+          fi
+          echo "Comprobaciones SQL en verde: $(grep -rhc '^ok' /tmp/*.txt | paste -sd+ | bc)"
+
+      - name: Comprobar el camino del aviso
+        run: python3 scripts/verificar-mailpit.py
+
+      - name: Comprobar el orden del backlog
+        run: python3 scripts/verificar-backlog.py
+
+  publicar:
+    name: Publicar
+    needs: verificar
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write       # etiquetas, publicaciones y el commit del historial
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # semantic-release necesita toda la historia y las etiquetas para
+          # saber desde dónde analizar.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci || npm install
+
+      - name: Publicar versión
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

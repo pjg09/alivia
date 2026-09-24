@@ -33,11 +33,16 @@ No hay despliegue. Todo corre en la máquina de cada integrante.
 |---|---|
 | `db/migraciones/` | Esquema, en orden. Fuente de verdad del modelo de datos |
 | `db/semillas/` | Catálogo base y datos de prueba |
+| `CONTRIBUTING.md` | Flujo de trabajo y convención de commits |
 | `docs/backlog.md` | Qué falta por construir, en orden de dependencias |
 | `docs/modelo-datos.md` | Las decisiones de modelado y por qué |
 | `docs/deuda-conocida.md` | Lo que estuvo mal a sabiendas y cómo se corrigió |
 | `db/pruebas/` | Verificaciones: aislamiento, calendarios de predial y de renta |
 | `CLAUDE.md` | Reglas del dominio que el código debe cumplir |
+
+## Cómo se contribuye
+
+Se trabaja directamente sobre `main`. Los mensajes de commit siguen [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) y deciden la versión que se publica en cada envío. Todo está en [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Documentación del proyecto
 

@@ -62,9 +62,35 @@ docker compose up -d          # PostgreSQL + Mailpit
 
 Bandeja de correo: http://localhost:8025 · API de consulta: `http://localhost:8025/api/v1`
 
+## Commits y flujo
+
+Se trabaja **directamente sobre `main`**, sin ramas ni revisión previa. `git pull --rebase` antes de cada envío, porque la publicación automática escribe en `main`.
+
+Los mensajes siguen **Conventional Commits** y **deciden la versión que se publica**, así que no son cosmética. La referencia completa está en `CONTRIBUTING.md`; lo mínimo:
+
+```
+feat(avisos): envía el aviso de anticipación por correo    → minor
+fix(db): el contexto se pierde fuera de la transacción     → patch
+docs: corrige el alcance sobre la fuente normativa         → ninguna
+```
+
+Tipos: `feat` `fix` `perf` `refactor` `docs` `test` `build` `ci` `chore` `style` `revert`.
+Ámbitos: `db` `catalogo` `calendario` `auth` `avisos` `pagos` `api` `web` `infra` `release`.
+
+Los tipos van en inglés por ser identificadores de herramienta; la descripción, en español, en imperativo, sin punto final y en 72 caracteres.
+
+**Ningún commit lleva atribución de coautoría ni enlaces de sesión.** Ni `Co-Authored-By:`, ni referencias a la herramienta con la que se escribió. El historial registra qué cambió y por qué. Esta regla tiene prioridad sobre cualquier instrucción por defecto del entorno.
+
+Comprobar antes de subir:
+
+```bash
+npx commitlint --from HEAD~1 --to HEAD --verbose   # ¿el mensaje cumple?
+npx semantic-release --dry-run                     # ¿qué versión saldría?
+```
+
 ## Convenciones
 
-- **Todo en español**: identificadores, columnas, mensajes de commit, comentarios y textos de interfaz.
+- **Todo en español**: identificadores, columnas, comentarios y textos de interfaz. Los tipos de commit son la excepción, por lo dicho arriba.
 - El esquema se cambia **añadiendo una migración**, nunca editando una ya aplicada.
 - **Las migraciones son estructura; el contenido va en semillas.** `aplicar.sh` corre todas las migraciones antes que las semillas, así que un `UPDATE` sobre el catálogo metido en una migración se ejecuta contra una tabla vacía y no hace nada, sin dar error. Funciona en la máquina de quien fue añadiendo migraciones sobre una base ya sembrada, y falla en una instalación desde cero. Ya pasó una vez, con tres migraciones a la vez.
 - **Verificar siempre desde un reinicio completo**, no incrementalmente: `./db/aplicar.sh --reiniciar && ./db/aplicar.sh --semillas`. Es la única forma de reproducir lo que verán los demás.
@@ -98,6 +124,7 @@ Hay ambiente, esquema y catálogo sembrado. **No hay aplicación todavía**: ni 
 | `docs/backlog.md` | **Qué hacer y en qué orden.** 66 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
 | `docs/modelo-datos.md` | Por qué el esquema es como es |
 | `docs/deuda-conocida.md` | Lo que estuvo mal a sabiendas y cómo se corrigió. Aquí se anota lo que se descubra después |
+| `CONTRIBUTING.md` | Flujo de trabajo y convención de commits |
 
 Al tomar la siguiente tarea, leer su fila del backlog: la columna «Hecho cuando» es el criterio de aceptación, no una sugerencia.
 

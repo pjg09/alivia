@@ -1,9 +1,10 @@
-node_modules/
-dist/
 build/
+dist/
+.DS_Store
 .env
 .env.local
-*.log
-.DS_Store
-.vscode/
 .idea/
+*.log
+node_modules/
+package-lock.json
+.vscode/
