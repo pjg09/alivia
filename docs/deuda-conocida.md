@@ -8,32 +8,54 @@ Cada entrada tiene un identificador estable (`D1`, `D2`…) al que el backlog ha
 
 ## D1 · El impuesto predial no es una obligación de periodicidad relativa
 
-**Gravedad: alta.** Afecta a una de las cinco obligaciones emblema del producto.
+**Estado: saldado en el modelo el 24 de septiembre de 2026. Queda pendiente la carga de ocho municipios.**
 
-### Qué está mal
+### Qué estaba mal
 
-El modelo calcula el vencimiento como `fecha_base + periodicidad`, donde `fecha_base` es un dato que declara el usuario. El predial no funciona así: **vence en una fecha del calendario fijada por el acuerdo de cada municipio**, igual para todos los contribuyentes de ese municipio, y con fechas de descuento por pronto pago que también son municipales.
+El modelo calculaba todo vencimiento como `fecha_base + periodicidad`, con la fecha base declarada por el usuario. El predial no funciona así: vence en fechas que fija cada municipio por norma.
 
-Hoy el catálogo lo tiene sembrado como `interval '1 year'` desde una fecha base del usuario. Eso significa que si alguien declara que compró su casa el 10 de marzo, el sistema le avisará cada 10 de marzo — una fecha que **no tiene ninguna relación** con el vencimiento real del predial en su municipio.
+### Lo que se encontró al investigar
 
-### Por qué importa
+Peor de lo que decía esta entrada. **No hay un patrón común entre municipios**, ni siquiera dentro del Valle de Aburrá:
 
-El alcance cita cinco casos una y otra vez: SOAT, tecnomecánica, predial, renta y controles médicos. El predial es uno de ellos, y está en un módulo gratuito, que es donde el producto promete cubrir la multa evitable.
+| Municipio | Régimen |
+|---|---|
+| **Medellín** | Trimestral, **con fecha distinta por código sectorial** (20 sectores), y dos fechas por trimestre: sin recargo y con recargo. **168 fechas al año** |
+| **Copacabana** | Trimestral, una sola fecha por trimestre, sin sectores |
+| Bello | Trimestral, fecha única, distinta de la de Copacabana |
+| Envigado | Semestral, con descuento por pronto pago |
+| Sabaneta | Anual con descuento, más un sistema opcional de cuotas |
 
-Un aviso en la fecha equivocada no es un aviso imperfecto: es peor que no avisar, porque el usuario confía y no revisa.
+Cualquier esquema que supusiera «una fecha por municipio y año» se rompía con el primero.
 
-### Qué haría falta
+Además, **las fechas se modifican durante el año**: Bello amplió el plazo del primer trimestre y Envigado extendió el suyo. Un calendario cargado puede quedar obsoleto a mitad de vigencia.
 
-Un segundo tipo de recurrencia, por calendario en lugar de por intervalo:
+### Cómo quedó resuelto
 
-- Un campo que distinga `recurrencia_relativa` (SOAT: un año desde que compré) de `recurrencia_calendario` (predial: la fecha que dice el municipio).
-- Una tabla de fechas oficiales por año y por ámbito — en este caso, municipio.
-- Un atributo del usuario que diga en qué municipio está el inmueble.
-- Curaduría de esas fechas, que es trabajo de investigación, no de programación.
+Migración `009_recurrencia_por_calendario.sql`:
 
-### Mientras tanto
+- `municipio`, `calendario_tributario` y `vencimiento_calendario`: una lista de fechas con segmento, etiqueta y tipo, que cada municipio llena según su propio régimen.
+- `obligacion_usuario.tipo_recurrencia` distingue tres casos: `relativa` (SOAT), `calendario` (predial donde hay norma cargada) y `declarada` (el usuario pone la fecha).
+- `app.proximo_vencimiento_calendario()` resuelve la siguiente fecha. **Sin calendario cargado no devuelve nada**, y quien llame debe caer a recurrencia declarada en lugar de inventar una fecha.
+- Las fechas `con_recargo` existen como información pero **nunca generan aviso**: avisar de ellas es avisar de que ya se pagó de más.
 
-**El predial no debería presentarse al usuario como una fecha calculada por el sistema.** Las dos salidas honestas son dejar que el usuario declare él mismo la fecha de vencimiento que le corresponde, o retirar la entrada del catálogo hasta que se pueda hacer bien.
+Verificado en `db/pruebas/calendario.sql`, once comprobaciones contrastadas contra la norma citada.
+
+### Lo que queda pendiente
+
+**Solo dos de los diez municipios tienen calendario cargado**, porque son los dos cuya norma se leyó:
+
+| Municipio | Norma | Estado |
+|---|---|---|
+| Medellín | Resolución 202550100057 del 9-dic-2025, art. 6 | **Verificado** |
+| Copacabana | Resolución 2025000SHI2898 del 18-dic-2025, art. 1 | **Verificado** |
+| Bello, Envigado, Itagüí, Sabaneta, La Estrella, Caldas, Girardota, Barbosa | — | **Sin cargar** |
+
+Los ocho restantes **no se sembraron a propósito**. La información disponible venía de prensa y de agregadores que repiten las mismas fechas —«25 de abril / 11 de julio»— para Sabaneta, La Estrella y Girardota por igual, lo que es señal de copia y no de fuente. Este proyecto ya tuvo que corregir tres datos propagados desde prensa; no se repite el error.
+
+Mientras no se carguen, sus usuarios usan recurrencia `declarada`: el sistema avisa, pero la fecha la pone el usuario.
+
+**Y hay un límite de calendario:** solo existe el año 2026. El calendario de 2027 se publicará hacia diciembre de 2026 —el de 2026 se expidió el 9 de diciembre de 2025—, así que **este sistema se queda sin fechas en enero** salvo que alguien las recargue. El costo recurrente es de diez cargas anuales, no de una.
 
 ---
 

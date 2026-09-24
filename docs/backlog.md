@@ -19,7 +19,7 @@ Si alguien añade o reordena tareas, ese script tiene que seguir pasando.
 | Hecho cuando | La condición que decide si está terminada. Si no se puede comprobar, no es un criterio |
 | Dep. | Tareas que deben estar terminadas antes. Siempre números menores |
 
-**Lo que ya está hecho** y por eso no aparece aquí: ambiente de contenedores, las ocho migraciones del esquema, el catálogo sembrado con 40 entradas y la verificación de aislamiento en `db/pruebas/rls.sql`.
+**Lo que ya está hecho** y por eso no aparece aquí: ambiente de contenedores, las nueve migraciones del esquema, el catálogo sembrado con 40 entradas, la recurrencia por calendario que saldó la deuda D1, y las verificaciones de `db/pruebas/`.
 
 **Paralelismo.** Son cuatro personas. Dos tareas con el mismo número en `Dep.` y sin relación entre sí pueden ir a la vez; el grafo de dependencias es lo que dice qué se puede repartir, no la numeración.
 
@@ -148,9 +148,9 @@ El alcance pide no gastar esfuerzo en decoración, con una excepción declarada:
 | 58 | Política de tratamiento de datos, redactada y accesible desde la aplicación | Se puede leer antes de autorizar, no después | 46 |
 | 59 | Autorización separada para datos de salud, con negativa sin penalización | Quien no autoriza datos de salud **conserva el resto del servicio completo**. Es categoría especial bajo la Ley 1581 de 2012 | 48, 58 |
 | 60 | Canal de consultas y reclamos del titular | Existe una vía documentada para ejercer los derechos de la ley, con sus plazos declarados | 58 |
-| 61 | **Deuda D1 y D2: recurrencia por calendario** para predial y renta | El predial y la renta dejan de calcularse desde una fecha base inventada. Ver `docs/deuda-conocida.md` | 20, 49 |
+| 61 | **Deuda D2: recurrencia por calendario para la declaración de renta**, que depende del NIT y del calendario DIAN | La renta deja de calcularse desde una fecha base inventada. El esquema de calendario ya existe desde que se saldó D1 | 20, 49 |
 | 62 | Deuda D3: la tecnomecánica distingue carro de motocicleta | Un motociclista recibe su primer aviso al segundo año, no al quinto | 61 |
-| 63 | Deuda D4: curaduría de las fuentes normativas del catálogo | Solo las entradas efectivamente comprobadas contra la norma quedan con `fuente_verificada = true` | 17 |
+| 63 | Deuda D4: curaduría de las fuentes normativas del catálogo **y carga de los ocho municipios del Valle de Aburrá que faltan** | Solo lo comprobado contra la norma queda marcado como verificado. Los ocho calendarios se leen de su resolución, no de prensa | 17 |
 | 64 | Modelo de información documentado, derivado del esquema | Entregable 7 del alcance. Se genera del esquema real, no se redacta aparte | 61 |
 | 65 | Semillas de demostración y guion de sustentación | Un comando deja la base en un estado que permite recorrer el producto entero delante de un jurado | 36, 43, 56 |
 | 66 | Repaso final contra las seis reglas duras de `CLAUDE.md` | Cada regla tiene una prueba que la respalda, o una explicación de por qué no la tiene | 65 |

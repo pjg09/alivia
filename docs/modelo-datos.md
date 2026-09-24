@@ -117,7 +117,17 @@ Restricción `sancionable_exige_fuente`. Impide por construcción que se cuele u
 
 Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para resolver cada una. No se repiten aquí para que no haya dos versiones que se contradigan.
 
-Las dos que importan antes de construir encima: **el impuesto predial (D1) y la declaración de renta (D2) hoy se calculan mal**, porque ninguna de las dos es una obligación de periodicidad relativa a una fecha que el usuario declare.
+**D1 quedó saldado** con la recurrencia por calendario (2.13). La que sigue abierta y importa antes de construir encima es **D2: la declaración de renta**, que depende del NIT y de un calendario DIAN que cambia cada año.
+
+### 2.13 Hay tres formas de saber cuándo vence algo
+
+`relativa` es `fecha_base + periodicidad`: el SOAT vence un año después de que compré el carro. Sirve para casi todo el catálogo.
+
+`calendario` es lo que dice la norma de un territorio. El predial de Medellín vence en cuatro trimestres, **con fecha distinta según el código sectorial del predio** —El Poblado el 13 de febrero, Popular el 4 de marzo—, mientras que el de Copacabana tiene una sola fecha por trimestre. No hay patrón común entre municipios, así que el modelo es una lista de fechas con segmento, etiqueta y tipo que cada municipio llena a su manera.
+
+`declarada` es el camino honesto para lo que el sistema no sabe: si el municipio del usuario no tiene calendario cargado, la fecha la pone él. `app.proximo_vencimiento_calendario()` **no devuelve nada** cuando no hay norma cargada, precisamente para que nadie tenga la tentación de rellenar el hueco con una fecha plausible.
+
+Las fechas marcadas `con_recargo` se guardan pero nunca generan aviso: avisar de ellas es avisar de que ya se pagó de más.
 
 ---
 
@@ -127,6 +137,7 @@ Las dos que importan antes de construir encima: **el impuesto predial (D1) y la 
 docker compose up -d
 ./db/aplicar.sh --reiniciar && ./db/aplicar.sh --semillas
 psql "$DATABASE_URL" -f db/pruebas/rls.sql
+psql "$DATABASE_URL" -f db/pruebas/calendario.sql
 ```
 
-Trece comprobaciones. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.
+Trece comprobaciones de aislamiento y once de calendario. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.
