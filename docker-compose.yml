@@ -17,7 +17,12 @@ services:
     volumes:
       - datos_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U alivia_propietario -d alivia"]
+      # -h 127.0.0.1 no es adorno. Durante la inicialización, el entrypoint de
+      # postgres levanta un servidor temporal que escucha SOLO en el socket
+      # unix; `pg_isready` sin -h lo encuentra y declara la base sana cuando
+      # todavía no acepta conexiones TCP, así que lo que dependa de ella
+      # arranca contra un puerto cerrado. Por TCP, «sano» significa lo que dice.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U alivia_propietario -d alivia"]
       interval: 5s
       timeout: 5s
       retries: 10
