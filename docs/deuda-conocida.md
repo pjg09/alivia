@@ -1,8 +1,10 @@
 # Deuda conocida
 
-Defectos y limitaciones **identificados y no resueltos**. No son descuidos: son decisiones de no arreglar algo todavía, con su costo anotado.
+Defectos y limitaciones identificados, con lo que costaba cada uno y cómo se corrigió. No son descuidos: son cosas que se supieron antes de arreglarse, y quedaron escritas mientras tanto.
 
-Cada entrada tiene un identificador estable (`D1`, `D2`…) al que el backlog hace referencia.
+**Hoy no hay ninguna abierta** — ver el estado al final. La lista se conserva porque el porqué de cada corrección explica decisiones del modelo que de otro modo parecen arbitrarias, y porque aquí es donde se anota lo que se descubra de aquí en adelante.
+
+Cada entrada tiene un identificador estable (`D1`, `D2`…) al que el backlog hace referencia. Los identificadores no se reutilizan.
 
 ---
 
@@ -233,10 +235,46 @@ Es una hipótesis razonada, y está sembrada como tal.
 
 ---
 
-## D6 · El catálogo se administra con SQL
+## D6 · CERRADA — Trasladada al backlog como trabajo planificado
 
-**Gravedad: baja, y es alcance declarado.**
+**Cerrada el 24 de septiembre de 2026.** No se resolvió construyendo nada: se resolvió reconociendo que estaba mal clasificada.
 
-No hay interfaz de administración. Corregir una entrada del catálogo es escribir una migración. El alcance exige que el catálogo sea administrable **sin volver a publicar la aplicación**, y lo es —es un dato, no una constante del código—, pero administrarlo requiere acceso a la base de datos.
+### Por qué no era una deuda
 
-Construir el panel de administración está fuera del alcance de esta etapa.
+El catálogo se administra con SQL. Eso **no es un defecto**: el alcance dice explícitamente que el panel de administración queda fuera de esta etapa, y el requisito que sí importaba —que el catálogo sea información administrable del sistema y no una constante en el código del cliente— está cumplido. Es un dato en la base, corregible sin volver a publicar la aplicación.
+
+Una deuda es algo que está mal y no se sabe cuándo se arreglará. Esto es trabajo que no se ha hecho, con dependencias claras y un momento identificable para hacerlo. Eso pertenece al backlog, no a esta lista.
+
+### Dónde quedó
+
+**Fase 8 de `backlog.md`, tareas 67 a 69**, con sus dependencias resueltas:
+
+- **67** · Rol de administración separado, verificado en el servidor.
+- **68** · Panel de administración del catálogo: obligaciones, variantes y fuentes.
+- **69** · Carga de calendarios territoriales desde el panel.
+
+Está marcada como fuera del alcance de esta etapa, para que quede planificada sin crear la expectativa de que se construye ahora.
+
+### Cuándo deja de bastar el SQL
+
+Dos momentos concretos, los dos conocidos:
+
+- **Cada enero**, cuando hay que recargar los calendarios tributarios: el predial de cada municipio y la renta de la DIAN. Los decretos se expiden hacia diciembre, y sin ellos el sistema se queda sin fechas.
+- **Cuando la curaduría deje de hacerla quien escribe SQL.** Corregir una fuente normativa no debería exigir acceso a la base de datos.
+
+---
+
+## Estado de la lista
+
+| | Deuda | Estado |
+|---|---|---|
+| D1 | El predial no era de periodicidad relativa | **Resuelta** |
+| D2 | La renta dependía del NIT, no de una fecha base | **Resuelta** |
+| D3 | La tecnomecánica no distinguía carro de motocicleta | **Resuelta** |
+| D4 | Ninguna fuente normativa estaba verificada | **Resuelta** |
+| D5 | La ventana de anticipación era única por usuario | **Resuelta** |
+| D6 | El catálogo se administra con SQL | **Cerrada**, trasladada al backlog |
+
+**No queda deuda conocida abierta.** Lo que sigue pendiente es trabajo planificado —está en `backlog.md`— y cuatro datos declarados como no verificados en D4, que siguen sin verificar.
+
+Esta lista no está vacía porque el proyecto sea perfecto: está vacía porque lo que se sabe que falta ya tiene un sitio donde esperar su turno. Añadir aquí lo que se descubra después es parte del trabajo, no una señal de fracaso.

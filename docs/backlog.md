@@ -157,19 +157,34 @@ El alcance pide no gastar esfuerzo en decoración, con una excepción declarada:
 
 ---
 
+## Fase 8 · Administración del catálogo
+
+**Fuera del alcance de esta etapa.** Está aquí para que quede planificado y con sus dependencias resueltas, no porque se vaya a construir ahora. El alcance dice explícitamente que el panel de administración no entra en esta etapa.
+
+**Por qué está registrado en vez de dejarse como deuda:** no es un defecto, es trabajo que no se ha hecho. Hoy el catálogo se administra con SQL, y eso funciona mientras administre el equipo. Deja de funcionar en dos momentos concretos, los dos conocidos:
+
+- **Cada enero**, cuando hay que recargar los calendarios tributarios del año nuevo: los de predial de cada municipio y el de renta de la DIAN. Son decretos que se expiden hacia diciembre, y sin ellos el sistema se queda sin fechas.
+- **Cuando la curaduría deje de hacerla quien escribe SQL.** Corregir una fuente normativa o añadir una obligación no debería exigir acceso a la base de datos.
+
+| # | Tarea | Hecho cuando | Dep. |
+|---|---|---|---|
+| 67 | Rol de administración separado, verificado en el servidor | Un usuario corriente no alcanza ninguna ruta de administración, ni siquiera con una petición hecha a mano. La verificación vive donde no se puede eludir, igual que la de los módulos de pago | 3, 13 |
+| 68 | Panel de administración del catálogo: obligaciones, variantes y fuentes | Se puede corregir una fuente normativa, marcarla como verificada o añadir una obligación sin abrir la base de datos. Los cambios no alteran las obligaciones ya creadas por los usuarios, que guardan copia | 17, 47, 67 |
+| 69 | Carga de calendarios territoriales desde el panel | Subir el calendario de un municipio o el de la DIAN para un año nuevo deja de ser una migración. Cada calendario cargado exige declarar su norma, y sólo se marca verificado lo que alguien leyó | 68 |
+
+---
+
 ## Dos advertencias sobre este orden
 
-### La deuda D1 y D2 está colocada tarde, y eso cuesta
+### Las deudas del modelo ya están saldadas, y eso cambia el punto de partida
 
-La tarea 61 arregla el predial y la declaración de renta, que **hoy se calculan mal**. Está en la fase 7 porque así se decidió, pero conviene saber lo que implica:
+Cuando se escribió este backlog, las tareas 61 y 62 arreglaban defectos del modelo de datos —el predial y la renta calculados desde una fecha base inventada, la tecnomecánica sin distinguir carro de moto— y se advertía aquí de lo caro que salía dejarlos para el final.
 
-- Para cuando se aborde, ya habrá obligaciones creadas con el modelo equivocado, y habrá que migrarlas.
-- Las pantallas de las tareas 49 y 50 estarán construidas suponiendo que toda obligación tiene fecha base, y tendrán que admitir un segundo tipo.
-- Dos de las cinco obligaciones emblema del producto —SOAT, tecnomecánica, **predial**, **renta**, controles médicos— estarán dando avisos en fechas sin relación con el vencimiento real durante todo ese tiempo.
+**Se resolvieron antes de empezar la fase 0**, junto con la separación de fuentes y la ventana de anticipación por obligación. El detalle está en `docs/deuda-conocida.md`.
 
-**Dónde sería barato:** justo después de la tarea 27, antes de que exista interfaz. Ahí no hay datos que migrar ni pantallas que rehacer. Moverlo es cambiar un número.
+Lo que queda de aquellas tareas es carga de datos, no corrección de modelo: los calendarios de 2027 cuando se publiquen, los cinco municipios del Valle de Aburrá sin cargar, y la validación con usuarios de las anticipaciones sugeridas. Ninguna bloquea la construcción.
 
-**Mientras no se arregle**, lo honesto es que el predial y la renta no se presenten como fechas calculadas por el sistema: o las declara el usuario, o salen del catálogo.
+**Lo que sí conviene tener presente al construir:** los calendarios cargados sólo cubren **2026**. Los decretos se expiden cada año hacia diciembre, así que el sistema se queda sin fechas en enero salvo que alguien las recargue — y mientras no exista la tarea 69, recargarlas es escribir SQL.
 
 ### El producto está terminado en la tarea 36, no en la 66
 

@@ -94,13 +94,13 @@ Hay ambiente, esquema y catálogo sembrado. **No hay aplicación todavía**: ni 
 |---|---|
 | `docs/backlog.md` | **Qué hacer y en qué orden.** 66 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
 | `docs/modelo-datos.md` | Por qué el esquema es como es |
-| `docs/deuda-conocida.md` | Lo que está mal a sabiendas, con su costo |
+| `docs/deuda-conocida.md` | Lo que estuvo mal a sabiendas y cómo se corrigió. Aquí se anota lo que se descubra después |
 
 Al tomar la siguiente tarea, leer su fila del backlog: la columna «Hecho cuando» es el criterio de aceptación, no una sugerencia.
 
 El orden del backlog se comprueba con `python3 scripts/verificar-backlog.py`. Si se añaden o reordenan tareas, ese script tiene que seguir pasando.
 
-**D1 a D5 están resueltos.** El predial y la renta se calculan contra el calendario que fija la norma, la tecnomecánica distingue carro de moto, y cada obligación declara de dónde sale su fecha. Sólo queda D6, que es alcance declarado — ver `docs/deuda-conocida.md`.
+**No queda deuda conocida abierta.** El predial y la renta se calculan contra el calendario que fija la norma, la tecnomecánica distingue carro de moto, cada obligación declara de dónde sale su fecha y la anticipación se puede ajustar por obligación. Lo que falta es trabajo planificado y está en `docs/backlog.md`; el historial de lo corregido, en `docs/deuda-conocida.md`.
 
 **Una distinción que cuesta ver y hay que respetar:** la norma que hace algo obligatorio casi nunca es la que fija su fecha. El SOAT es obligatorio por ley y su vigencia anual la fija la póliza. Por eso el catálogo tiene `fuente_normativa`, `fuente_sancion` y `origen_plazo` separados. **No presentar como legal un plazo que sale de un contrato o de una factura.**
 

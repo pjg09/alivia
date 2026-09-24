@@ -155,7 +155,7 @@ El catálogo trae una sugerencia por obligación, pero **no actúa como valor de
 
 Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para resolver cada una. No se repiten aquí para que no haya dos versiones que se contradigan.
 
-**D1 a D5 quedaron saldados.** Sólo sigue abierta D6, que es alcance declarado: no hay panel de administración del catálogo en esta etapa.
+**Ya no queda deuda abierta**: D1 a D5 se resolvieron y D6 se trasladó al backlog como trabajo planificado, porque no era un defecto sino alcance no construido. Lo que falte de aquí en adelante se anota allí.
 
 ---
 

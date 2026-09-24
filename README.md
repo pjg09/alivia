@@ -35,7 +35,7 @@ No hay despliegue. Todo corre en la máquina de cada integrante.
 | `db/semillas/` | Catálogo base y datos de prueba |
 | `docs/backlog.md` | Qué falta por construir, en orden de dependencias |
 | `docs/modelo-datos.md` | Las decisiones de modelado y por qué |
-| `docs/deuda-conocida.md` | Lo que está mal a sabiendas |
+| `docs/deuda-conocida.md` | Lo que estuvo mal a sabiendas y cómo se corrigió |
 | `db/pruebas/` | Verificaciones: aislamiento, calendarios de predial y de renta |
 | `CLAUDE.md` | Reglas del dominio que el código debe cumplir |
 
