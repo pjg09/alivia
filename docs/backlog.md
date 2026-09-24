@@ -88,7 +88,7 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 
 | # | Tarea | Hecho cuando | Dep. |
 |---|---|---|---|
-| 28 | Cliente SMTP hacia Mailpit | Un correo de prueba sale del proceso y aparece en la bandeja de `localhost:8025` | 2, 4 |
+| 28 | Cliente SMTP hacia Mailpit | Un correo de prueba sale del proceso y aparece en la bandeja de `localhost:8025`. El camino completo ya está verificado con `scripts/verificar-mailpit.py` | 2, 4 |
 | 29 | Plantilla del correo de aviso: qué vence, cuándo, de qué módulo y qué pasa si no se cumple | El correo se lee bien en texto plano, no solo en HTML | 28 |
 | 30 | Consulta de las obligaciones que vencen **dentro de la ventana de anticipación de cada usuario**, con el rol `alivia_avisos` | La consulta parte de la anticipación, no del vencimiento. Buscar lo ya vencido es avisar tarde | 3, 22 |
 | 31 | Proceso de evaluación diaria: selecciona, envía y **registra el resultado real del envío** | Un envío que falla queda como `fallido` con su error. Nada se marca `entregado` sin que el servidor SMTP lo haya aceptado | 29, 30 |
@@ -96,7 +96,7 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 | 33 | Reintento de avisos fallidos, con tope de intentos | Un fallo transitorio se reintenta; uno permanente deja de consumir intentos y queda registrado | 31 |
 | 34 | Comando de disparo bajo demanda, con fecha de referencia inyectable | `npm run avisos -- --fecha 2026-12-01` evalúa como si hoy fuera esa fecha. **Sin esto no hay sustentación posible** | 31 |
 | 35 | Programación diaria dentro del proceso del servidor | La evaluación corre sola una vez al día y deja constancia de cada ejecución | 31 |
-| 36 | **Prueba del criterio único de aceptación contra la API de Mailpit** | Se siembra un vencimiento, se corre la evaluación con fecha controlada y se verifica en la bandeja que el aviso existe, es del usuario correcto y **salió antes del vencimiento**. Es la prueba que no puede fallar nunca | 5, 34 |
+| 36 | **Prueba del criterio único de aceptación contra la API de Mailpit** | Se siembra un vencimiento, se corre la evaluación con fecha controlada y se verifica en la bandeja que el aviso existe, es del usuario correcto y **salió antes del vencimiento**. Es la prueba que no puede fallar nunca. El cruce por `Message-ID` exige el prefijo `message-id:` y sin corchetes angulares — ver `CLAUDE.md` | 5, 34 |
 | 37 | Baja de avisos y frecuencia configurable, por la Ley 2300 de 2023 | El usuario desactiva los avisos y deja de recibirlos, sin perder sus datos | 14, 31 |
 
 > **Hito.** Terminada la tarea 36, el producto cumple lo único con lo que se comprometió. Todo lo que viene después lo hace usable y vendible, pero el compromiso ya está cumplido y demostrable.

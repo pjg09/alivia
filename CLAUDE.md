@@ -80,7 +80,10 @@ psql "$DATABASE_URL" -f db/pruebas/renta.sql       # 11 · renta por dígitos de
 psql "$DATABASE_URL" -f db/pruebas/variantes.sql   # 16 · tecnomecánica por tipo de vehículo
 psql "$DATABASE_URL" -f db/pruebas/fuentes.sql     # 12 · respaldo de cada obligación
 psql "$DATABASE_URL" -f db/pruebas/anticipacion.sql # 9 · ventana de aviso
+python3 scripts/verificar-mailpit.py               # 8 · camino del aviso
 ```
+
+**Cruzar `aviso.mensaje_id` con el correo entregado** se hace así, y la sintaxis no es obvia: `GET /api/v1/search?query=message-id:<valor>`, con el prefijo `message-id:` y **sin** los corchetes angulares. Buscar el valor crudo devuelve cero resultados sin dar error. Es de lo que depende la tarea 36.
 
 Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario; las de calendario, al tocar fechas o la función que las resuelve.
 
