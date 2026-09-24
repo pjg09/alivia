@@ -109,21 +109,17 @@ La salida no fue aflojar las políticas ni conectar la API con el propietario, s
 
 La verificación de la contraseña ocurre en la aplicación, nunca en la base de datos: `credenciales_por_correo` devuelve el hash y ahí acaba su trabajo.
 
-### 2.12 Una obligación sancionable sin fuente normativa no entra
+### 2.12 Una obligación sancionable tiene que declarar su consecuencia
 
-Restricción `sancionable_exige_fuente`. Impide por construcción que se cuele una tarea doméstica presentada como obligación con consecuencia legal, que es el defecto que hoy tiene el catálogo heredado —«lavado y aspirado cada 14 días», «revisar pico y placa cada 7 días»—.
+Restricción `sancionable_declara_su_consecuencia`. Impide por construcción que se cuele una tarea doméstica presentada como obligación con consecuencia, que es el defecto del catálogo heredado —«lavado y aspirado cada 14 días», «revisar pico y placa cada 7 días»—.
+
+La restricción original exigía **fuente normativa** a toda sancionable, y hubo que reemplazarla: codificaba un supuesto falso. El pago de una tarjeta de crédito tiene consecuencia económica real —intereses y reporte a centrales de riesgo— y ninguna norma fija su fecha, porque la fija el contrato. Lo que hay que exigir es que declare **cuál** es la consecuencia, no que exista una ley.
 
 `fuente_verificada` es un campo aparte. Las **ocho obligaciones sancionables** están verificadas contra el texto de su norma; las 32 recomendadas no lo están porque no hay norma que verificar.
 
 Y hay una distinción que costó descubrir: **la norma que hace algo obligatorio casi nunca es la que fija su fecha**. El SOAT es obligatorio por el artículo 42 de la Ley 769, pero su vigencia anual la fija la póliza. El Decreto 2257 de 1986 obliga a vacunar contra la rabia y delega expresamente la periodicidad en los ministerios. Por eso el catálogo separa `fuente_normativa`, `fuente_sancion` y `origen_plazo`, en lugar de meterlo todo en un campo que obligaría a mentir.
 
 ---
-
-## 3. Limitaciones conocidas
-
-Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para resolver cada una. No se repiten aquí para que no haya dos versiones que se contradigan.
-
-**D1 a D4 quedaron saldados.** Lo que sigue abierto son D5 y D6: una mejora barata y alcance declarado, nada estructural.
 
 ### 2.13 Hay tres formas de saber cuándo vence algo
 
@@ -145,6 +141,22 @@ La tecnomecánica vence distinto según qué se conduzca: quinto año para un ca
 
 Casi ninguna obligación tiene variantes. La estructura existe porque el dominio la pidió una vez y volverá a pedirla.
 
+### 2.15 La anticipación se decide en un solo sitio
+
+Un usuario tiene una preferencia general, y puede fijar otra para una obligación concreta: un mes para el SOAT, unos días para la tarjeta de crédito, porque avisar con un mes de algo que se paga cada mes es ruido — y el ruido hace que se silencien los avisos, incluidos los que importaban.
+
+`app.anticipacion_efectiva()` resuelve cuál aplica, y es el **único** sitio donde eso se decide. Si el proceso de avisos y la interfaz lo resolvieran por separado, el usuario vería una fecha en pantalla y recibiría el correo en otra.
+
+El catálogo trae una sugerencia por obligación, pero **no actúa como valor de respaldo**: se propone al crear y ahí termina su papel. Si actuara de respaldo, quién decide sería ambiguo, y quien decide es el usuario.
+
+---
+
+## 3. Limitaciones conocidas
+
+Están en **`deuda-conocida.md`**, con su gravedad y lo que haría falta para resolver cada una. No se repiten aquí para que no haya dos versiones que se contradigan.
+
+**D1 a D5 quedaron saldados.** Sólo sigue abierta D6, que es alcance declarado: no hay panel de administración del catálogo en esta etapa.
+
 ---
 
 ## 4. Cómo se verifica
@@ -157,6 +169,7 @@ psql "$DATABASE_URL" -f db/pruebas/calendario.sql
 psql "$DATABASE_URL" -f db/pruebas/renta.sql
 psql "$DATABASE_URL" -f db/pruebas/variantes.sql
 psql "$DATABASE_URL" -f db/pruebas/fuentes.sql
+psql "$DATABASE_URL" -f db/pruebas/anticipacion.sql
 ```
 
-Setenta comprobaciones en total: trece de aislamiento, dieciocho de calendario municipal, once de renta, dieciséis de variantes y doce de fuentes. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.
+Setenta y nueve comprobaciones: trece de aislamiento, dieciocho de calendario municipal, once de renta, dieciséis de variantes, doce de fuentes y nueve de anticipación. Cualquier línea que diga `FALLA` es un defecto. La comprobación del aislamiento no es opcional: es el requisito del que cuelga que la aplicación pueda manejar datos de salud.

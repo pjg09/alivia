@@ -203,13 +203,33 @@ Verificado en `db/pruebas/fuentes.sql`, doce comprobaciones.
 
 ---
 
-## D5 · La ventana de anticipación es única por usuario
+## D5 · RESUELTO — La ventana de anticipación era única por usuario
 
-**Gravedad: baja.**
+**Resuelto el 24 de septiembre de 2026.**
 
-No se puede pedir aviso con 30 días para el SOAT y 3 para el pago de una tarjeta de crédito, aunque las dos cosas tengan urgencias distintas.
+### Qué estaba mal
 
-**Qué haría falta:** una columna opcional en `obligacion_usuario` que tenga prioridad sobre la preferencia del usuario. Es barato y no rompe nada; simplemente no hacía falta todavía.
+La anticipación era una sola por cuenta: los mismos días para todo. Pero las urgencias no se parecen. El SOAT conviene avisarlo con un mes porque hay que cotizar y comprarlo; el pago de una tarjeta de crédito con pocos días, porque **avisar con un mes de algo que se paga cada mes es ruido**.
+
+Y el ruido no es un inconveniente menor en este producto: un usuario que silencia los avisos por pesados deja de recibir el que sí importaba. El criterio único de aceptación se pierde igual que si el aviso no se hubiera enviado nunca.
+
+### Cómo quedó resuelto
+
+Migración `013_anticipacion_por_obligacion.sql`:
+
+- `obligacion_usuario.dias_anticipacion`, opcional. NULL significa «usar mi preferencia general».
+- `obligacion_catalogo.dias_anticipacion_sugeridos`: lo que la interfaz propone al crear.
+- `app.anticipacion_efectiva()` resuelve la precedencia en **un solo sitio**, para que el proceso de avisos y la interfaz no puedan discrepar. Si cada uno la resolviera por su cuenta, el usuario vería una fecha en pantalla y recibiría el correo en otra.
+
+**La precedencia es deliberadamente simple: manda lo que el usuario fijó para esa obligación; si no fijó nada, manda su preferencia general.** La sugerencia del catálogo **no es un valor de respaldo** — si lo fuera, quién decide sería ambiguo. Se propone al crear y ahí acaba su papel. Hay una comprobación dedicada a que siga siendo así.
+
+Verificado en `db/pruebas/anticipacion.sql`, nueve comprobaciones.
+
+### Lo que no está respaldado
+
+Las anticipaciones sugeridas —30 días para el SOAT, 45 para la renta, 5 para la tarjeta— **son criterio de producto, no dato verificado**. El trabajo de campo que las respaldaría no se ha hecho. El criterio aplicado fue cuánto tiempo necesita alguien para *resolver* la obligación, no cuánto falta para que venza: comprar un SOAT exige cotizar, una tecnomecánica exige pedir cita y llevar el vehículo, pagar una tarjeta es inmediato.
+
+Es una hipótesis razonada, y está sembrada como tal.
 
 ---
 
