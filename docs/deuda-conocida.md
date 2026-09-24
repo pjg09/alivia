@@ -43,19 +43,41 @@ Verificado en `db/pruebas/calendario.sql`, once comprobaciones contrastadas cont
 
 ### Lo que queda pendiente
 
-**Solo dos de los diez municipios tienen calendario cargado**, porque son los dos cuya norma se leyó:
+**Cinco de los diez municipios tienen calendario cargado.** Solo se sembró lo leído en la resolución que lo fija:
 
-| Municipio | Norma | Estado |
+| Municipio | Norma | Régimen | Estado |
+|---|---|---|---|
+| Medellín | Resolución 202550100057 del 9-dic-2025, art. 6 | Trimestral por sector, 20 sectores | **Verificado**, 84 fechas |
+| Copacabana | Resolución 2025000SHI2898 del 18-dic-2025, art. 1 | Trimestral, fecha única | **Verificado** |
+| Sabaneta | Resolución 2025015914 del 29-dic-2025, art. 1 | Trimestral, fecha única | **Verificado** |
+| Barbosa | Resolución 3271 del 23-dic-2025 | Trimestral, con fecha de recargo | **Verificado** |
+| Girardota | Resolución 4666 de 2025 | Semestral, descuentos del 10 % y 5 % | **Verificado** |
+| Bello | — | — | Sin cargar: el PDF publicado es el de **2025** |
+| Envigado | — | — | Sin cargar: el portal falla por certificado y devuelve páginas vacías |
+| Itagüí | — | — | Sin cargar: no se localizó la norma de 2026 |
+| La Estrella | — | — | Sin cargar |
+| Caldas | — | — | Sin cargar |
+
+### Por qué no se sembró lo que no se verificó
+
+Porque al contrastarlo, **la prensa estaba mal en los dos casos comprobables**:
+
+| | Lo que repetían los agregadores | Lo que dice la norma |
 |---|---|---|
-| Medellín | Resolución 202550100057 del 9-dic-2025, art. 6 | **Verificado** |
-| Copacabana | Resolución 2025000SHI2898 del 18-dic-2025, art. 1 | **Verificado** |
-| Bello, Envigado, Itagüí, Sabaneta, La Estrella, Caldas, Girardota, Barbosa | — | **Sin cargar** |
+| Sabaneta | Anual, 10 % hasta el 25-abr, sin descuento hasta el 11-jul | **Trimestral**: 30-abr, 30-jun, 30-sep, 23-dic |
+| Girardota | Lo mismo, palabra por palabra | **Semestral**: 10 % hasta 24-abr, 5 % hasta 19-jun, 2.º semestre 14-dic |
 
-Los ocho restantes **no se sembraron a propósito**. La información disponible venía de prensa y de agregadores que repiten las mismas fechas —«25 de abril / 11 de julio»— para Sabaneta, La Estrella y Girardota por igual, lo que es señal de copia y no de fuente. Este proyecto ya tuvo que corregir tres datos propagados desde prensa; no se repite el error.
+Los mismos agregadores daban ese texto idéntico para Sabaneta, La Estrella y Girardota. Era copia, y era falsa. Sembrarla habría producido avisos en fechas equivocadas, que es peor que no avisar.
 
-Mientras no se carguen, sus usuarios usan recurrencia `declarada`: el sistema avisa, pero la fecha la pone el usuario.
+Y el PDF que Bello publica como «calendario tributario» resultó ser el de la vigencia **2025**, radicado en diciembre de 2024. Cargarlo sin mirar habría metido las fechas del año anterior como si fueran las vigentes.
 
-**Y hay un límite de calendario:** solo existe el año 2026. El calendario de 2027 se publicará hacia diciembre de 2026 —el de 2026 se expidió el 9 de diciembre de 2025—, así que **este sistema se queda sin fechas en enero** salvo que alguien las recargue. El costo recurrente es de diez cargas anuales, no de una.
+Los cinco municipios sin cargar usan recurrencia `declarada`: el sistema avisa, pero la fecha la pone el usuario.
+
+### El límite que no se puede resolver trabajando más
+
+**Solo existe el año 2026.** El calendario de 2027 se publicará hacia diciembre de 2026 — el de 2026 se expidió el 9 de diciembre de 2025 —, así que **este sistema se queda sin fechas en enero** salvo que alguien las recargue. El costo recurrente es de cinco a diez cargas anuales, no de una.
+
+Además, **las fechas se modifican durante la vigencia**: Bello amplió el plazo del primer trimestre y Envigado extendió el suyo. Un calendario cargado puede quedar obsoleto sin que nadie se entere.
 
 ---
 

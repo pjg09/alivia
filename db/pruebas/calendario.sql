@@ -73,9 +73,45 @@ SELECT CASE WHEN count(*) = 0 THEN 'ok    todo calendario cargado cita su norma'
 FROM calendario_tributario WHERE norma IS NULL OR btrim(norma) = '';
 
 -- --- Solo se marca verificado lo leido en la norma -------------------------
-SELECT CASE WHEN count(*) = 2 THEN 'ok    2 calendarios verificados contra fuente primaria'
-            ELSE 'FALLA hay ' || count(*) || ' verificados; se esperaban 2' END
+SELECT CASE WHEN count(*) = 5 THEN 'ok    5 calendarios verificados contra fuente primaria'
+            ELSE 'FALLA hay ' || count(*) || ' verificados; se esperaban 5' END
 FROM calendario_tributario WHERE verificado;
+
+-- Nada cargado sin verificar: si aparece, alguien sembro datos de prensa.
+SELECT CASE WHEN count(*) = 0 THEN 'ok    no hay calendarios sin verificar'
+            ELSE 'FALLA ' || count(*) || ' calendario(s) sin fuente primaria leida' END
+FROM calendario_tributario WHERE NOT verificado;
+
+-- --- Cada municipio con su propio regimen -----------------------------------
+-- Sabaneta: Resolución 2025015914 de 2025, art. 1. Trimestre I = 30-abr-26.
+-- La prensa decia "anual, 10% hasta el 25 de abril". La norma dice otra cosa.
+SELECT CASE WHEN (SELECT fecha FROM app.proximo_vencimiento_calendario(
+                    '05631','hogar.predial','trimestral',NULL,DATE '2026-01-01')) = DATE '2026-04-30'
+            THEN 'ok    Sabaneta trimestre I = 30-abr-26'
+            ELSE 'FALLA Sabaneta no coincide con la resolucion' END;
+
+-- Barbosa: Resolución 3271 de 2025. Trimestre I sin recargo = 15-abr-26.
+SELECT CASE WHEN (SELECT fecha FROM app.proximo_vencimiento_calendario(
+                    '05079','hogar.predial','trimestral',NULL,DATE '2026-01-01')) = DATE '2026-04-15'
+            THEN 'ok    Barbosa trimestre I = 15-abr-26'
+            ELSE 'FALLA Barbosa no coincide con la resolucion' END;
+
+-- Girardota: Resolución 4666 de 2025. Semestral, primera oportunidad con 10%.
+SELECT CASE WHEN (SELECT fecha FROM app.proximo_vencimiento_calendario(
+                    '05308','hogar.predial','semestral',NULL,DATE '2026-01-01')) = DATE '2026-04-24'
+            THEN 'ok    Girardota primer vencimiento = 24-abr-26'
+            ELSE 'FALLA Girardota no coincide con la resolucion' END;
+
+SELECT CASE WHEN (SELECT descuento_pct FROM app.proximo_vencimiento_calendario(
+                    '05308','hogar.predial','semestral',NULL,DATE '2026-01-01')) = 10.00
+            THEN 'ok    Girardota lleva su descuento del 10% en el dato'
+            ELSE 'FALLA se pierde el descuento por pronto pago' END;
+
+-- Cinco municipios, cuatro regimenes distintos: ningun par comparte estructura.
+SELECT CASE WHEN count(DISTINCT modalidad) >= 2 AND count(*) = 5
+            THEN 'ok    5 municipios con regimenes heterogeneos conviven'
+            ELSE 'FALLA el modelo no esta soportando la variedad real' END
+FROM calendario_tributario WHERE anio = 2026;
 
 -- --- Cobertura completa de Medellin ----------------------------------------
 -- 20 sectores x 4 trimestres = 80 fechas ordinarias.

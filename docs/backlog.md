@@ -150,7 +150,7 @@ El alcance pide no gastar esfuerzo en decoración, con una excepción declarada:
 | 60 | Canal de consultas y reclamos del titular | Existe una vía documentada para ejercer los derechos de la ley, con sus plazos declarados | 58 |
 | 61 | **Deuda D2: recurrencia por calendario para la declaración de renta**, que depende del NIT y del calendario DIAN | La renta deja de calcularse desde una fecha base inventada. El esquema de calendario ya existe desde que se saldó D1 | 20, 49 |
 | 62 | Deuda D3: la tecnomecánica distingue carro de motocicleta | Un motociclista recibe su primer aviso al segundo año, no al quinto | 61 |
-| 63 | Deuda D4: curaduría de las fuentes normativas del catálogo **y carga de los ocho municipios del Valle de Aburrá que faltan** | Solo lo comprobado contra la norma queda marcado como verificado. Los ocho calendarios se leen de su resolución, no de prensa | 17 |
+| 63 | Deuda D4: curaduría de las fuentes normativas del catálogo **y carga de los cinco municipios del Valle de Aburrá que faltan** (Bello, Envigado, Itagüí, La Estrella, Caldas) | Solo lo comprobado contra la norma queda marcado como verificado. Los calendarios se leen de su resolución, no de prensa | 17 |
 | 64 | Modelo de información documentado, derivado del esquema | Entregable 7 del alcance. Se genera del esquema real, no se redacta aparte | 61 |
 | 65 | Semillas de demostración y guion de sustentación | Un comando deja la base en un estado que permite recorrer el producto entero delante de un jurado | 36, 43, 56 |
 | 66 | Repaso final contra las seis reglas duras de `CLAUDE.md` | Cada regla tiene una prueba que la respalda, o una explicación de por qué no la tiene | 65 |
