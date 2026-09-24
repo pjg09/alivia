@@ -171,3 +171,19 @@ El punto de partida está marcado con la etiqueta **`v0.1.0`** sobre el último 
 ```bash
 git push origin main --follow-tags
 ```
+
+**`--follow-tags` hace falta solo en ese primer envío.** Envía las etiquetas anotadas creadas en local, y `v0.1.0` es la única que se crea a mano: todas las siguientes las crea semantic-release dentro del flujo de trabajo, así que ya nacen en el remoto y viajan en sentido contrario — las recibes al actualizar. Usarlo siempre no molesta: si no hay etiquetas locales nuevas, no hace nada. Quien no quiera acordarse:
+
+```bash
+git config push.followTags true   # una vez, en cada máquina
+```
+
+### El ritmo del día a día
+
+Lo que sí ocurre en cada envío no son las etiquetas, sino esto: **cuando se publica una versión, el remoto queda con un commit que tú no tienes** — el `chore(release)` con el `CHANGELOG.md` y la versión de `package.json`. Sin actualizar antes, el siguiente envío se rechaza.
+
+```bash
+git pull --rebase && git push
+```
+
+Trabajando cuatro personas directamente sobre `main`, pasa a menudo. No es un problema: es la consecuencia de que la versión salga del historial.
