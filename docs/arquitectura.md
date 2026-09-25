@@ -87,6 +87,27 @@ SELECT set_config('alivia.fecha_referencia', $2, true);   -- si se inyectó
 
 Añadir `INSERT` o `UPDATE` a cualquiera de esos dos grants deshace una de estas dos garantías. No se hace sin una razón escrita en `docs/deuda-conocida.md`.
 
+### El caso de `JWT_SECRETO`, donde tres reglas del proyecto chocan
+
+La misma validación resuelve una colisión que no es evidente hasta que existe el servicio del servidor:
+
+| Regla | Dice |
+|---|---|
+| Regla 7 de `CLAUDE.md` | `up` sin `.env` deja el proyecto listo |
+| Esta decisión | La validación rechaza un secreto de plantilla |
+| `CLAUDE.md` | Ningún secreto en el repositorio, ni siquiera de pruebas |
+
+Con un valor por defecto en el compose hay un secreto en el repositorio, y si es el de plantilla la validación mata el proceso, el contenedor nunca está sano y `up --wait` falla. Sin ningún valor, la validación lo mata igual por falta de variable. Las tres no pueden cumplirse a la vez.
+
+**La salida: la validación distingue ausente de inválido.**
+
+- **`JWT_SECRETO` ausente** → el servidor genera uno aleatorio al arrancar y **avisa** de que las sesiones no sobreviven a un reinicio. Arranca sin `.env`, y no hay secreto en el repositorio.
+- **`JWT_SECRETO` con un valor de plantilla** → el proceso muere, con un mensaje que dice cuál es el problema.
+
+`.env.example` lo lleva comentado, con esa explicación. Quien quiera que sus sesiones sobrevivan a un reinicio, lo descomenta en su `.env`.
+
+**Es el único caso con esta salida.** Una URL de base de datos ausente no se inventa: mata el proceso. El secreto de firma es distinto porque generarlo es legítimo y no compromete nada.
+
 ---
 
 ## 3 · Una fecha civil cruza el cable como cadena `AAAA-MM-DD`

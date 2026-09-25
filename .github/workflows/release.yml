@@ -45,6 +45,16 @@ jobs:
       - name: Instalar dependencias
         run: npm ci || npm install
 
+      # Las URLs y los puertos salen del único sitio donde están documentados.
+      # Antes este trabajo los declaraba en un bloque `env:`, que era una
+      # segunda copia y ya había derivado. Y no vale con no poner nada:
+      # verificar-todo.sh resuelve las suyas en variables que NO exporta, así
+      # que `npm test` --tarea 4-- arrancaría sin ninguna URL de base de datos.
+      # Comprobado. Los puertos de .env.example los vigila verificar-arranque.py
+      # contra el compose, así que esto no reintroduce la duplicación.
+      - name: Tomar la configuración documentada
+        run: cp .env.example .env
+
       # La misma línea que corre cualquiera de las cuatro máquinas. Son dos
       # órdenes porque `up --wait` da por bueno un servicio efímero con que haya
       # arrancado: sin el `compose wait`, las pruebas corren contra una base a

@@ -96,6 +96,14 @@ Un valor, un sitio. Los demás lo leen del entorno.
 
 **El entorno gana sobre el `.env`.** Los scripts rellenan del `.env` solo lo que no venga ya exportado. Sin eso, un `.env` con `localhost:5434` montado dentro de un contenedor pisa la URL que le pasa compose —cuyo anfitrión es `postgres`, no `localhost`— y la conexión falla. Es la razón de que `migraciones` monte solo `./db` y no el repositorio entero.
 
+## Cuando la integración continua empiece a tardar
+
+Hoy el trabajo de verificación tarda alrededor de un minuto, porque los tres servicios son imágenes que se descargan. En cuanto `api/` y `web/` tengan su `Dockerfile`, cada ejecución construye dos imágenes de Node sin caché, y eso son varios minutos.
+
+**Lo que no se hace para arreglarlo:** quitar el `build` de la CI, o volver a montar los servicios con `services:` de GitHub Actions, o levantar solo la base de datos y correr el servidor con `npm`. Cualquiera de esas tres deshace la única garantía fuerte que tenemos de que el compose funciona: que la CI arranca con él y con nada más. Y las tres son tentadoras justo cuando alguien tiene prisa.
+
+**Lo que sí se hace,** el día que moleste de verdad: caché de capas de buildx entre ejecuciones (`cache-from`/`cache-to` con el almacén de GitHub Actions). No cambia lo que se construye ni cómo, solo lo reutiliza.
+
 ## Correr una segunda pila en paralelo
 
 Para probar el arranque desde cero sin destruir la base de trabajo:
