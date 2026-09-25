@@ -172,7 +172,7 @@ npx semantic-release --dry-run                     # ¿qué versión saldría?
 Y si el cambio tocó el ambiente, desde cero, que es lo que verá la CI:
 
 ```bash
-docker compose down -v && docker compose up -d --wait && docker compose wait migraciones && ./scripts/verificar-todo.sh
+docker compose down -v && docker compose up -d --wait --build && ./scripts/verificar-todo.sh
 ```
 
 ## Historia anterior a la convención

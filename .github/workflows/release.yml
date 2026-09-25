@@ -55,12 +55,13 @@ jobs:
       - name: Tomar la configuración documentada
         run: cp .env.example .env
 
-      # La misma línea que corre cualquiera de las cuatro máquinas. Son dos
-      # órdenes porque `up --wait` da por bueno un servicio efímero con que haya
-      # arrancado: sin el `compose wait`, las pruebas corren contra una base a
-      # medio poblar y fallan de forma intermitente. Ver docs/ambiente.md.
+      # La misma línea que corre cualquiera de las cuatro máquinas. Espera a que
+      # las migraciones terminen porque `api` depende de ellas con
+      # service_completed_successfully; sin esa cadena, `--wait` devuelve con la
+      # base a medio poblar y las pruebas fallan de forma intermitente, que es la
+      # peor clase de fallo. Ver docs/ambiente.md.
       - name: Levantar el ambiente
-        run: docker compose up -d --wait && docker compose wait migraciones
+        run: docker compose up -d --wait --build
 
       # Un solo paso a propósito. Las pruebas se descubren por dónde están
       # --db/pruebas/*.sql, scripts/verificar-*.py y npm test--, así que una

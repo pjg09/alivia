@@ -22,10 +22,12 @@ npm run arrancar              # y ya: base de datos, esquema, catálogo y correo
 `npm run arrancar` es exactamente esto, y se puede escribir a mano:
 
 ```bash
-docker compose up -d --wait && docker compose wait migraciones
+docker compose up -d --wait --build
 ```
 
-Son dos órdenes porque `up --wait` espera a que los servicios estén *sanos o corriendo*, y a un servicio que corre, termina y sale —como el que aplica las migraciones— le basta con haber arrancado: devuelve antes de que acabe. Está medido, y está explicado en [`docs/ambiente.md`](docs/ambiente.md).
+Espera de verdad a que las migraciones terminen, aunque no lo diga: el servicio del servidor no arranca hasta que el que aplica el esquema **acabó bien**, y `--wait` espera a que el servidor esté sano. El porqué de que esa cadena haga falta está en [`docs/ambiente.md`](docs/ambiente.md).
+
+Si acabas de traer migraciones nuevas a una pila que ya estaba levantada, `npm run actualizar`: recrea los contenedores, porque si no el servidor sigue corriendo con el esquema viejo.
 
 Eso no es una buena intención, es un contrato comprobado: la integración continua arranca con este mismo fichero y `scripts/verificar-arranque.py` se pone rojo si el compose se queda atrás del código.
 

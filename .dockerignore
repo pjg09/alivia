@@ -1,0 +1,14 @@
+# El contexto es la raiz del repositorio: sin esto se envian node_modules y
+# todo el historial de git al demonio en cada construccion.
+node_modules
+**/node_modules
+.git
+.github
+dist
+**/dist
+.env
+.env.local
+*.log
+db/pruebas
+docs
+scripts

@@ -63,7 +63,9 @@ npm run arrancar              # TODO el ambiente: servicios, esquema y semillas
 docker compose down -v        # destruye el volumen de PostgreSQL
 ```
 
-`npm run arrancar` es `docker compose up -d --wait && docker compose wait migraciones`. Son dos órdenes por una razón medida: `up --wait` da por bueno un servicio efímero con que haya *arrancado*, así que devuelve antes de que las migraciones terminen y las pruebas corren contra una base a medio poblar. `compose wait` espera de verdad. Está en `docs/ambiente.md`.
+`npm run arrancar` es `docker compose up -d --wait --build`, y espera a que las migraciones terminen aunque no lo diga: el servicio `api` declara `depends_on` sobre `migraciones` con `service_completed_successfully`, así que no arranca hasta que el esquema está aplicado, y `--wait` espera a que `api` esté sano. Sin esa cadena, `up --wait` da por bueno un efímero con que haya *arrancado* y las pruebas corren contra una base a medio poblar. Está medido, en `docs/ambiente.md`.
+
+`npm run actualizar` es lo mismo con `--force-recreate`, para cuando llega una migración nueva a una pila ya levantada: sin recrear, `api` sigue con el esquema viejo.
 
 Ese es el único arranque; los de abajo son para trabajar sobre una base ya levantada.
 
@@ -129,7 +131,11 @@ Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que corre
 
 ## Estado actual
 
-Hay ambiente, esquema y catálogo sembrado. **No hay aplicación todavía**: ni servidor, ni interfaz, ni pruebas de la aplicación. Lo siguiente es el esqueleto del servidor con el patrón de contexto por transacción, que es de lo que cuelga la regla 1.
+Hay ambiente, esquema, catálogo sembrado y el **esqueleto del servidor** en `api/`: TypeScript, `npm run dev` con recarga, y su servicio en el compose con `/salud` respondiendo. Tarea 1 hecha.
+
+**No hay lógica todavía**: ni configuración validada, ni acceso a datos, ni interfaz, ni pruebas de la aplicación. `/salud` responde `arrancado` y no comprueba nada, a propósito.
+
+Lo siguiente, tres en paralelo porque solo dependen de la 1: la **8** (formateador), la **2** (configuración validada) y la **6** (errores HTTP). Después la **3**, `conUsuario()`, que es de donde cuelga la regla 1 y la más importante del proyecto.
 
 **Antes de escribir la primera línea del servidor, leer `docs/arquitectura.md`.** Las decisiones 1 a 4 son justo las que toman las tareas 1, 3, 6 y 7, y están tomadas ya: quién abre la transacción, qué rol no puede existir en el proceso que atiende peticiones, cómo cruza una fecha civil el JSON y qué forma tiene un error HTTP.
 

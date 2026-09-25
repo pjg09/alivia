@@ -1,0 +1,22 @@
+{
+  "name": "@alivia/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Servidor de Alivia",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/principal.ts",
+    "tipos": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node dist/principal.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

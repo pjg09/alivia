@@ -17,7 +17,9 @@ Si alguien añade o reordena tareas, ese script tiene que seguir pasando.
 | `#` | Identificador estable. No se reutiliza ni se renumera |
 | Tarea | Qué se construye |
 | Hecho cuando | La condición que decide si está terminada. Si no se puede comprobar, no es un criterio |
-| Dep. | Tareas que deben estar terminadas antes. Siempre números menores |
+| Dep. | Tareas que deben estar terminadas antes. Siempre tareas que ya aparecieron **más arriba** |
+
+**Una tarea terminada se marca `**HECHA**` al principio de su celda, y se queda donde está.** No se borra: el orden es un grafo de dependencias, y quitar un nodo deja huérfanas a las que colgaban de él. `verificar-backlog.py` comprueba que ninguna tarea marcada dependa de otra sin marcar — si eso pasa, o la marca está de más o falta una.
 
 **Lo que ya está hecho** y por eso no aparece aquí: ambiente de contenedores, las trece migraciones del esquema, el catálogo sembrado con 40 entradas y sus 8 obligaciones sancionables verificadas contra la norma, las deudas D1 a D5 saldadas, y las verificaciones de `db/pruebas/`.
 
@@ -31,7 +33,7 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 
 | # | Tarea | Hecho cuando | Dep. |
 |---|---|---|---|
-| 1 | Proyecto del servidor en **`api/`**, con TypeScript y script de arranque en desarrollo | `npm run dev` levanta un proceso que compila y recarga. El servidor va en `api/` y la interfaz en `web/`, como paquetes separados — decisión 0 de `docs/arquitectura.md`. Y el servicio entra en `docker-compose.yml` **en el mismo cambio**, o `scripts/verificar-arranque.py` se pone rojo | — |
+| 1 | **HECHA** · Proyecto del servidor en **`api/`**, con TypeScript y script de arranque en desarrollo | `npm run dev` levanta un proceso que compila y recarga. El servidor va en `api/` y la interfaz en `web/`, como paquetes separados — decisión 0 de `docs/arquitectura.md`. Y el servicio entra en `docker-compose.yml` **en el mismo cambio**, o `scripts/verificar-arranque.py` se pone rojo | — |
 | 8 | Convenciones de código y formato automático | El formateador corre igual en las cuatro máquinas y no genera ruido en los diffs. **Va de segunda a propósito**: cuatro personas sin formateador generan ruido en los diffs desde el primer día, y el cambio que lo introduce después toca todos los ficheros a la vez | 1 |
 | 2 | Configuración leída del entorno y **validada al arrancar** | Falta una variable obligatoria y el proceso muere con un mensaje que dice cuál, en lugar de fallar más tarde. Y distingue **ausente** de **de plantilla**: sin `JWT_SECRETO` el servidor genera uno aleatorio y avisa de que las sesiones no sobreviven a un reinicio; con `JWT_SECRETO=cambiar-en-cada-maquina` **muere**. Es lo único que deja convivir la regla 7 —arranca sin `.env`—, el rechazo del valor de plantilla y la prohibición de secretos en el repositorio: ver la decisión 2 de `docs/arquitectura.md`. Son **dos esquemas distintos**, el del servidor y el del proceso de avisos, y el del servidor no declara `DATABASE_URL_AVISOS` — decisión 2 de `docs/arquitectura.md` | 1 |
 | 3 | Acceso a datos: pool de conexiones y función `conUsuario()` que abre transacción, fija `alivia.usuario_id` y la cierra | Toda consulta de datos de usuario pasa por ahí. Intentar consultar fuera de una transacción con contexto es imposible por construcción, no por disciplina | 2 |

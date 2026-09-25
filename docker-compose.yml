@@ -111,5 +111,61 @@ services:
     command: ["--semillas"]
     restart: "no"
 
+  # Servidor. Tarea 1 del backlog: el esqueleto, con /salud respondiendo para
+  # que --wait sepa que arrancó. La tarea 7 lo pasa a Express y hace que /salud
+  # informe de verdad del estado de la base y del correo.
+  #
+  # `depends_on` con service_completed_successfully sobre `migraciones` tiene un
+  # efecto lateral útil: en un arranque en frío, esperar a que «api» esté sano
+  # implica esperar a que el esquema esté aplicado. El `docker compose wait
+  # migraciones` del arranque sigue siendo necesario, porque sobre una pila ya
+  # levantada compose no recrea «api» y no habría nada que esperar.
+  api:
+    build:
+      # El contexto es la raíz porque npm ci con espacios de trabajo necesita el
+      # package-lock.json de la raíz. Lo que no entra lo dice .dockerignore.
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: alivia-api
+    labels:
+      alivia.rol-bd: app    # sujeto a RLS. Nunca propietario: regla 1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migraciones:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_healthy
+    # SIN env_file, y esto es importante. El .env es del proyecto entero y lleva
+    # las URLs de los tres roles; pasárselo a un servicio le entrega también la
+    # del propietario, que ignora RLS por completo, y la de avisos, que ve los
+    # datos de todos los usuarios. Es la decisión 2 de docs/arquitectura.md
+    # rota por la puerta de atrás, y sin un solo error.
+    #
+    # Comprobado: con `env_file: .env`, el contenedor recibía
+    # DATABASE_URL_MIGRACIONES, DATABASE_URL_AVISOS y el JWT_SECRETO de
+    # plantilla. Lo atrapó scripts/verificar-arranque.py.
+    #
+    # Un servicio declara lo que necesita, y nada más. Lo que deba poder
+    # ajustarse desde el .env entra por sustitución, con su nombre, uno a uno.
+    environment:
+      # PUERTO no se fija: dentro del contenedor vale el 3000 de la imagen. La
+      # variable mueve el puerto PUBLICADO, como PUERTO_POSTGRES con la base.
+      TZ: America/Bogota
+      PGTZ: America/Bogota
+      DATABASE_URL: postgres://alivia_app:${POSTGRES_CONTRASENA:-desarrollo}@postgres:5432/alivia
+      SMTP_HOST: mailpit
+      SMTP_PUERTO: 1025
+    ports:
+      - "${PUERTO:-3000}:3000"
+    healthcheck:
+      # Con node y no con curl o wget: la imagen no los trae y no vale la pena
+      # instalarlos para esto.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/salud').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
 volumes:
   datos_postgres:

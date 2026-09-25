@@ -29,6 +29,7 @@ def main() -> int:
 
     tareas: dict[int, list[int]] = {}
     orden: list[int] = []
+    hechas: set[int] = set()
     errores: list[str] = []
 
     for n, linea in enumerate(BACKLOG.read_text(encoding="utf-8").splitlines(), 1):
@@ -45,6 +46,8 @@ def main() -> int:
 
         tareas[ident] = deps
         orden.append(ident)
+        if "**HECHA**" in m.group(2):
+            hechas.add(ident)
 
         for d in deps:
             if d == ident:
@@ -70,6 +73,15 @@ def main() -> int:
                     f"en el documento: leyendo de arriba abajo no se puede hacer"
                 )
 
+    # Una tarea terminada no puede depender de una que no lo esta: o la marca esta
+    # de mas, o falta una. Es el unico error que el orden no detecta por si solo.
+    for ident in sorted(hechas):
+        for d in tareas[ident]:
+            if d not in hechas:
+                errores.append(
+                    f"la tarea {ident} esta marcada HECHA y depende de {d}, que no lo esta"
+                )
+
     # Numeracion contigua desde 1: un hueco suele ser una tarea borrada sin pensar.
     faltan = sorted(set(range(1, max(tareas) + 1)) - set(tareas))
     if faltan:
@@ -85,6 +97,8 @@ def main() -> int:
     print(f"ok · {len(tareas)} tareas, numeradas de 1 a {max(tareas)}")
     print("ok · ninguna tarea depende de otra que aparezca mas abajo")
     print(f"ok · {len(sin_dep)} tarea(s) sin dependencias: {sin_dep}")
+    print(f"ok · {len(hechas)} hecha(s) de {len(tareas)}: {sorted(hechas)}, "
+          f"y ninguna depende de una sin hacer")
     return 0
 
 

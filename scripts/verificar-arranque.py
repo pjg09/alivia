@@ -158,24 +158,53 @@ def main() -> int:
                       f"eso deja a un usuario viendo los datos de otro, en silencio "
                       f"y sin un solo error (regla 1 de CLAUDE.md)")
 
+    # --- Ningun servicio recibe el .env entero -------------------------------
+    # El .env es del proyecto y lleva las URLs de los tres roles. Pasarselo a un
+    # servicio le entrega la del propietario, que ignora RLS, y la de avisos, que
+    # ve los datos de todos los usuarios: la decision 2 de docs/arquitectura.md
+    # rota por la puerta de atras y sin un solo error.
+    #
+    # Se mira el texto y no la configuracion resuelta porque docker inlinea
+    # env_file dentro de environment: en una maquina sin .env el rastro
+    # desaparece y la fuga se volveria invisible justo donde nadie mira.
+    # La clave YAML, no la palabra: un comentario que la explique no es un uso.
+    comprobar(re.search(r"^\s*env_file\s*:", crudo, re.M) is None,
+              "ningun servicio recibe el .env entero",
+              "algun servicio usa env_file. El .env es del proyecto y lleva las URLs "
+              "del propietario y de avisos; un servicio declara lo que necesita, una a "
+              "una. Si hace falta un fichero de entorno propio de un servicio, cambiar "
+              "esta comprobacion y explicar por que (decision 2 de docs/arquitectura.md)")
+
     # --- Lo que existe en el repositorio, existe en el compose ---------------
     # Esta es la comprobacion por la que este fichero existe: el dia que
     # aparezca api/ o web/, el compose tiene que levantarlos o esto se pone rojo.
     # docker resuelve build.context a ruta absoluta, asi que se compara por el
     # directorio al que apunta y no por el texto escrito en el fichero.
     construidos = set()
-    for s in servicios.values():
-        b = s.get("build")
-        contexto = b if isinstance(b, str) else (b or {}).get("context")
-        if not contexto:
-            continue
-        ruta = pathlib.Path(contexto)
+
+    def apuntar(valor):
+        """Anade la ruta, relativa a la raiz, que un build declara."""
+        ruta = pathlib.Path(valor)
         if not ruta.is_absolute():
             ruta = RAIZ / ruta
         try:
             construidos.add(ruta.resolve().relative_to(RAIZ).as_posix())
         except ValueError:
             construidos.add(ruta.resolve().as_posix())   # fuera del repositorio
+
+    for s in servicios.values():
+        b = s.get("build")
+        if isinstance(b, str):
+            apuntar(b)
+        elif isinstance(b, dict):
+            if b.get("context"):
+                apuntar(b["context"])
+            # Un componente con espacios de trabajo se construye con el contexto
+            # en la RAIZ --npm ci necesita el package-lock de arriba-- y el
+            # Dockerfile dentro de su carpeta. Mirar solo el contexto daba el
+            # componente por no levantado, que es un falso positivo.
+            if b.get("dockerfile"):
+                apuntar(pathlib.Path(b["dockerfile"]).parent)
 
     for d in sorted(p for p in RAIZ.iterdir() if p.is_dir()):
         if d.name in NO_COMPONENTES or d.name.startswith("."):
@@ -257,14 +286,43 @@ def main() -> int:
                   "que deriva del compose, que es justo lo que ya paso")
 
     # --- El arranque es uno, y esta escrito igual en todas partes -------------
-    # `up --wait` espera a que los servicios esten sanos O CORRIENDO, asi que un
-    # servicio efimero le vale con haber arrancado: devuelve antes de que
-    # termine. Comprobado con un efimero de 12s, devolvio 0 a los 6. Por eso el
-    # arranque tiene que esperar explicitamente a cada efimero, y por eso este
-    # script deriva el comando del compose en vez de confiar en lo que se
-    # escribio a mano en cada sitio.
-    arranque = "docker compose up -d --wait" + "".join(
-        f" && docker compose wait {n}" for n in sorted(efimeros))
+    # `up --wait` espera a que los servicios esten sanos O CORRIENDO, asi que a
+    # un servicio efimero le vale con haber arrancado: devuelve antes de que
+    # termine. Comprobado con un efimero de 12s, devolvio 0 a los 6, y las
+    # pruebas corrian contra una base a medio poblar.
+    #
+    # Hay dos formas de esperarlo de verdad:
+    #
+    #   (a) Que un servicio CON healthcheck declare depends_on sobre el con
+    #       condition: service_completed_successfully. Entonces --wait ya lo
+    #       espera, porque el dependiente no arranca hasta que el efimero acaba.
+    #   (b) Anadir `docker compose wait <nombre>` al arranque.
+    #
+    # (a) es preferible y (b) deja de funcionar en su presencia: `docker compose
+    # wait` responde «no containers for project» y sale con 1 cuando el
+    # contenedor ya termino, que es exactamente lo que pasa con (a). Comprobado.
+    #
+    # Este script deriva el arranque del compose --que efimeros hay y cuales
+    # estan cubiertos por (a)-- en vez de confiar en lo que se escribio a mano.
+    por_dependencia = set()
+    for nombre, s in servicios.items():
+        if not s.get("healthcheck"):
+            continue
+        for dep, cond in (s.get("depends_on") or {}).items():
+            if isinstance(cond, dict) and cond.get("condition") == "service_completed_successfully":
+                por_dependencia.add(dep)
+
+    cubiertos = sorted(set(efimeros) & por_dependencia)
+    pendientes = sorted(set(efimeros) - por_dependencia)
+    for n in cubiertos:
+        comprobar(True, f"a «{n}» lo espera --wait por dependencia de un servicio sano", "")
+
+    # --build porque `up` solo construye si la imagen NO existe: sin el, cambiar
+    # codigo del servidor y arrancar levanta el binario viejo, y el fallo es que
+    # «no se aplico mi cambio», que se persigue durante media hora.
+    hay_que_construir = any(s.get("build") for s in servicios.values())
+    arranque = "docker compose up -d --wait" + (" --build" if hay_que_construir else "")
+    arranque += "".join(f" && docker compose wait {n}" for n in pendientes)
     print(f"  ---   arranque derivado del compose: {arranque}")
 
     lugares = {
@@ -277,10 +335,19 @@ def main() -> int:
     }
     for etiqueta, ruta in lugares.items():
         f = RAIZ / ruta
-        comprobar(f.exists() and arranque in f.read_text(encoding="utf-8"),
+        texto = f.read_text(encoding="utf-8") if f.exists() else ""
+        comprobar(arranque in texto,
                   f"{etiqueta} documenta el arranque completo",
                   f"{etiqueta} no contiene «{arranque}»: un arranque a medias deja "
                   f"las pruebas corriendo contra una base a medio poblar")
+        # Un `compose wait` que sobro: falla con «no containers for project»
+        # porque el efimero ya termino, y tumba el arranque entero.
+        for n in cubiertos:
+            comprobar(f"docker compose wait {n}" not in texto,
+                      f"{etiqueta} no espera dos veces a «{n}»",
+                      f"{etiqueta} contiene «docker compose wait {n}», que ya se espera "
+                      f"por dependencia: ese comando sale con 1 porque el contenedor ya "
+                      f"termino, y hace fallar el arranque")
 
     if fallos:
         print(f"\n  {len(fallos)} comprobacion(es) en rojo. El contrato del ambiente "
