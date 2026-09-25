@@ -2,6 +2,12 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.2.2](https://github.com/pjg09/alivia/compare/v0.2.1...v0.2.2) (2026-09-25)
+
+### Correcciones
+
+* **infra:** la configuración de la CI salía de ningún sitio ([017db0e](https://github.com/pjg09/alivia/commit/017db0e94096e241476e5f0f7a10f20bac53fdaf))
+
 ## [0.2.1](https://github.com/pjg09/alivia/compare/v0.2.0...v0.2.1) (2026-09-25)
 
 ### Correcciones
