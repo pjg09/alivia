@@ -2,6 +2,22 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.2.1](https://github.com/pjg09/alivia/compare/v0.2.0...v0.2.1) (2026-09-25)
+
+### Correcciones
+
+* **infra:** la regla del compose no cubría un componente en la raíz ([9f71ae5](https://github.com/pjg09/alivia/commit/9f71ae56817502fcd0288c9a4c88004b083fa050))
+
+### Documentación
+
+* el orden del backlog se mide por posición, no por número ([f8413b2](https://github.com/pjg09/alivia/commit/f8413b2201c614cc2a2a7017292032cd2f77bf35))
+* fija las seis decisiones de arquitectura que faltaban ([a6c5d74](https://github.com/pjg09/alivia/commit/a6c5d74ba54997a6bd4e211c38562312ec785340))
+* las fechas cargadas se acaban en octubre, no en enero ([ae2629f](https://github.com/pjg09/alivia/commit/ae2629f501ee9c2083587613391e4614005528ed))
+
+### Pruebas
+
+* **db:** una migración repetida o con hueco ya no llega a main ([619c333](https://github.com/pjg09/alivia/commit/619c33345e7e62ce5c462c50df4b4d691b4cd8e3))
+
 ## [0.2.0](https://github.com/pjg09/alivia/compare/v0.1.0...v0.2.0) (2026-09-24)
 
 ### Funcionalidad
