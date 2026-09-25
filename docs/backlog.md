@@ -150,11 +150,11 @@ El alcance pide no gastar esfuerzo en decoración, con una excepción declarada:
 | 58 | Política de tratamiento de datos, redactada y accesible desde la aplicación | Se puede leer antes de autorizar, no después | 46 |
 | 59 | Autorización separada para datos de salud, con negativa sin penalización | Quien no autoriza datos de salud **conserva el resto del servicio completo**. Es categoría especial bajo la Ley 1581 de 2012 | 48, 58 |
 | 60 | Canal de consultas y reclamos del titular | Existe una vía documentada para ejercer los derechos de la ley, con sus plazos declarados | 58 |
-| 61 | Carga del calendario tributario de **2027**, cuando se publique: predial de los municipios cubiertos y renta de la DIAN | El sistema deja de quedarse sin fechas en enero. Los decretos se expiden hacia diciembre del año anterior | 20, 49 |
+| 61 | Carga del calendario tributario de **2027**, cuando se publique: predial de los municipios cubiertos y renta de la DIAN | El sistema deja de quedarse sin fechas. Los decretos se expiden hacia diciembre del año anterior, así que **antes de enero de 2027 no se puede hacer**: hasta entonces vale la fecha de referencia inyectada (D7) | 20, 49 |
 | 62 | Validar con usuarios las anticipaciones sugeridas del catálogo | Los 30 días del SOAT y los 5 de la tarjeta dejan de ser criterio del equipo y pasan a estar respaldados | 23 |
 | 63 | Carga de los cinco municipios del Valle de Aburrá que faltan (Bello, Envigado, Itagüí, La Estrella, Caldas) | Cada calendario se lee de su resolución, no de prensa. Solo lo comprobado queda marcado como verificado | 17 |
 | 64 | Modelo de información documentado, derivado del esquema | Entregable 7 del alcance. Se genera del esquema real, no se redacta aparte | 61 |
-| 65 | Semillas de demostración y guion de sustentación | Un comando deja la base en un estado que permite recorrer el producto entero delante de un jurado | 36, 43, 56 |
+| 65 | Semillas de demostración y guion de sustentación | Un comando deja la base en un estado que permite recorrer el producto entero delante de un jurado. **Fija `alivia.fecha_referencia` en una fecha de la primera mitad de 2026 y lo declara en el guion**: en noviembre no queda ninguna fecha futura de renta, y con el reloj real esa parte de la demostración no existe (D7) | 36, 43, 56 |
 | 66 | Repaso final contra las siete reglas duras de `CLAUDE.md` | Cada regla tiene una prueba que la respalda, o una explicación de por qué no la tiene | 65 |
 
 ---
@@ -186,7 +186,7 @@ Cuando se escribió este backlog, las tareas 61 y 62 arreglaban defectos del mod
 
 Lo que queda de aquellas tareas es carga de datos, no corrección de modelo: los calendarios de 2027 cuando se publiquen, los cinco municipios del Valle de Aburrá sin cargar, y la validación con usuarios de las anticipaciones sugeridas. Ninguna bloquea la construcción.
 
-**Lo que sí conviene tener presente al construir:** los calendarios cargados sólo cubren **2026**. Los decretos se expiden cada año hacia diciembre, así que el sistema se queda sin fechas en enero salvo que alguien las recargue — y mientras no exista la tarea 69, recargarlas es escribir SQL.
+**Lo que sí conviene tener presente al construir:** los calendarios cargados sólo cubren **2026**, y no aguantan hasta enero. La renta se agota el **26 de octubre de 2026** y el predial el **31 de diciembre**. Como la sustentación es en noviembre, toda prueba y toda demostración que toque el calendario tributario **fija `alivia.fecha_referencia`**; con el reloj real, pasan hoy y fallan en noviembre. Aceptado a sabiendas como D7 en `docs/deuda-conocida.md`, con salida en enero de 2027.
 
 ### El producto está terminado en la tarea 36, no en la 66
 

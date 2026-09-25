@@ -152,4 +152,6 @@ El orden del backlog se comprueba con `python3 scripts/verificar-backlog.py`. Si
 
 **Una distinción que cuesta ver y hay que respetar:** la norma que hace algo obligatorio casi nunca es la que fija su fecha. El SOAT es obligatorio por ley y su vigencia anual la fija la póliza. Por eso el catálogo tiene `fuente_normativa`, `fuente_sancion` y `origen_plazo` separados. **No presentar como legal un plazo que sale de un contrato o de una factura.**
 
-**Lo que hay que tener presente al construir encima:** los calendarios cargados solo cubren **2026**. Los decretos se expiden cada año hacia diciembre, así que el sistema se queda sin fechas en enero salvo que alguien las recargue.
+**Lo que hay que tener presente al construir encima:** los calendarios cargados solo cubren **2026**, y no aguantan hasta enero. La renta se agota el **26 de octubre de 2026** y el predial el **31 de diciembre**; a 25 de septiembre ya han pasado 136 de los 205 vencimientos cargados. La sustentación es en noviembre, o sea que **ocurrirá con seguridad**.
+
+No se resuelve cargando 2027, que todavía no está expedido: se resuelve con el reloj inyectable. **Toda prueba y toda demostración que toque el calendario tributario fija `alivia.fecha_referencia`.** Una que use el reloj real pasa hoy y falla en noviembre sin que nadie haya tocado nada. Está registrado como D7 en `docs/deuda-conocida.md`.

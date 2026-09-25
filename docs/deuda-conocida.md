@@ -264,6 +264,37 @@ Dos momentos concretos, los dos conocidos:
 
 ---
 
+## D7 · ACEPTADA — El calendario tributario solo cubre 2026, y la renta se agota el 26 de octubre
+
+**Aceptada a sabiendas el 25 de septiembre de 2026, con la sustentación prevista para noviembre.** No se va a resolver en esta etapa. Se anota para que nadie la descubra en medio de una demostración.
+
+### El dato, consultado contra la base
+
+| Obligación | Vencimientos cargados | Ya pasaron el 25-09-2026 | Último del año |
+|---|---|---|---|
+| `finanzas.renta` | 100 | 62 | **2026-10-26** |
+| `hogar.predial` | 105 | 74 | 2026-12-31 |
+
+**Después del 26 de octubre no queda ni una sola fecha futura de renta.** La sustentación es en noviembre, así que ocurrirá con seguridad, no es un riesgo.
+
+### Por qué se acepta
+
+Cargar el calendario de 2027 es imposible: los decretos se expiden hacia diciembre del año anterior y todavía no existen. Y no hace falta: **el reloj es inyectable**. Una demostración con `alivia.fecha_referencia` fijada a una fecha de la primera mitad de 2026 muestra el producto entero, incluida la renta, sin inventar un solo dato.
+
+Lo que se está aceptando no es un defecto del modelo —D1 y D2 lo dejaron correcto— sino que los **datos** cargados caducan. Si el proyecto pasa a producción real, se vuelve a curar con las normas de ese año; la tarea 61 ya lo contempla.
+
+### Lo que obliga a hacer, y no es negociable
+
+- **Toda prueba y toda demostración que toque el calendario tributario fija `alivia.fecha_referencia`.** Una que use el reloj real pasa hoy y falla en noviembre sin que nadie haya tocado nada. Es la peor clase de fallo: parece mala suerte.
+- **La tarea 65** (semillas de demostración y guion de sustentación) fija esa fecha explícitamente y la declara en el guion.
+- Esto no aplica al SOAT, la tecnomecánica ni los controles médicos: son de periodicidad relativa a la fecha base del usuario y no dependen de ningún calendario cargado.
+
+### Cuándo deja de estar aceptada
+
+En enero de 2027, si el proyecto continúa. Hasta entonces, no es un problema: es una restricción conocida con una salida conocida.
+
+---
+
 ## Estado de la lista
 
 | | Deuda | Estado |
@@ -274,7 +305,8 @@ Dos momentos concretos, los dos conocidos:
 | D4 | Ninguna fuente normativa estaba verificada | **Resuelta** |
 | D5 | La ventana de anticipación era única por usuario | **Resuelta** |
 | D6 | El catálogo se administra con SQL | **Cerrada**, trasladada al backlog |
+| D7 | El calendario solo cubre 2026; la renta se agota el 26 de octubre | **Aceptada** hasta enero de 2027 |
 
-**No queda deuda conocida abierta.** Lo que sigue pendiente es trabajo planificado —está en `backlog.md`— y cuatro datos declarados como no verificados en D4, que siguen sin verificar.
+**No queda deuda conocida abierta.** D7 está aceptada a sabiendas, con su salida escrita y sin bloquear nada. Lo que sigue pendiente es trabajo planificado —está en `backlog.md`— y cuatro datos declarados como no verificados en D4, que siguen sin verificar.
 
 Esta lista no está vacía porque el proyecto sea perfecto: está vacía porque lo que se sabe que falta ya tiene un sitio donde esperar su turno. Añadir aquí lo que se descubra después es parte del trabajo, no una señal de fracaso.
