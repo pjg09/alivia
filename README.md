@@ -44,6 +44,7 @@ No hay despliegue. Todo corre en la máquina de cada integrante.
 | `db/migraciones/` | Esquema, en orden. Fuente de verdad del modelo de datos |
 | `db/semillas/` | Catálogo base y datos de prueba |
 | `docs/ambiente.md` | El contrato del arranque con un solo comando |
+| `docs/arquitectura.md` | Las seis decisiones de diseño que el código debe cumplir |
 | `CONTRIBUTING.md` | Flujo de trabajo y convención de commits |
 | `docs/backlog.md` | Qué falta por construir, en orden de dependencias |
 | `docs/modelo-datos.md` | Las decisiones de modelado y por qué |

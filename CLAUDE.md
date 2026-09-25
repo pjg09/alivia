@@ -131,12 +131,15 @@ Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que corre
 
 Hay ambiente, esquema y catálogo sembrado. **No hay aplicación todavía**: ni servidor, ni interfaz, ni pruebas de la aplicación. Lo siguiente es el esqueleto del servidor con el patrón de contexto por transacción, que es de lo que cuelga la regla 1.
 
+**Antes de escribir la primera línea del servidor, leer `docs/arquitectura.md`.** Las decisiones 1 a 4 son justo las que toman las tareas 1, 3, 6 y 7, y están tomadas ya: quién abre la transacción, qué rol no puede existir en el proceso que atiende peticiones, cómo cruza una fecha civil el JSON y qué forma tiene un error HTTP.
+
 ## Dónde mirar
 
 | Documento | Para qué |
 |---|---|
 | `docs/backlog.md` | **Qué hacer y en qué orden.** 69 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
 | `docs/ambiente.md` | El contrato del arranque con un solo comando, y qué debe declarar cada servicio nuevo |
+| `docs/arquitectura.md` | **Las seis decisiones que el backlog da por supuestas.** Transacciones, límite del rol de avisos, fechas en el JSON, contrato HTTP, dónde corre el proceso de avisos y el snapshot del catálogo |
 | `docs/modelo-datos.md` | Por qué el esquema es como es |
 | `docs/deuda-conocida.md` | Lo que estuvo mal a sabiendas y cómo se corrigió. Aquí se anota lo que se descubra después |
 | `CONTRIBUTING.md` | Flujo de trabajo y convención de commits |

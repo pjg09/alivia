@@ -86,6 +86,8 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 
 **Esta fase es el producto.** El criterio único de aceptación se gana o se pierde aquí; todo lo anterior es andamiaje para llegar.
 
+Las tres capas —evaluación, envío y disparador— y por qué el disparador es un proceso aparte están en `docs/arquitectura.md`.
+
 | # | Tarea | Hecho cuando | Dep. |
 |---|---|---|---|
 | 28 | Cliente SMTP hacia Mailpit | Un correo de prueba sale del proceso y aparece en la bandeja de `localhost:8025`. El camino completo ya está verificado con `scripts/verificar-mailpit.py` | 2, 4 |
@@ -95,7 +97,7 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 | 32 | Idempotencia verificada: correr la evaluación dos veces el mismo día no duplica avisos | La segunda ejecución no genera correos nuevos ni filas nuevas | 31 |
 | 33 | Reintento de avisos fallidos, con tope de intentos | Un fallo transitorio se reintenta; uno permanente deja de consumir intentos y queda registrado | 31 |
 | 34 | Comando de disparo bajo demanda, con fecha de referencia inyectable | `npm run avisos -- --fecha 2026-12-01` evalúa como si hoy fuera esa fecha. **Sin esto no hay sustentación posible** | 31 |
-| 35 | Programación diaria dentro del proceso del servidor | La evaluación corre sola una vez al día y deja constancia de cada ejecución | 31 |
+| 35 | Programación diaria en **su propio proceso**, como servicio del compose | La evaluación corre sola una vez al día y deja constancia de cada ejecución. El pool de `alivia_avisos` **no existe** en el proceso que atiende peticiones: es la decisión 5 de `docs/arquitectura.md`, y lo que impide que la regla 1 se anule por la puerta de atrás. Sin cron dentro del contenedor | 31 |
 | 36 | **Prueba del criterio único de aceptación contra la API de Mailpit** | Se siembra un vencimiento, se corre la evaluación con fecha controlada y se verifica en la bandeja que el aviso existe, es del usuario correcto y **salió antes del vencimiento**. Es la prueba que no puede fallar nunca. El cruce por `Message-ID` exige el prefijo `message-id:` y sin corchetes angulares — ver `CLAUDE.md` | 5, 34 |
 | 37 | Baja de avisos y frecuencia configurable, por la Ley 2300 de 2023 | El usuario desactiva los avisos y deja de recibirlos, sin perder sus datos | 14, 31 |
 
