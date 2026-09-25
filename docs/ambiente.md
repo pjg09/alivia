@@ -58,6 +58,32 @@ Al añadir una pieza que corre —el servidor, la interfaz, el proceso de avisos
 - Un `Dockerfile` que ningún servicio construye. Una imagen que nadie levanta no es parte del ambiente.
 - Un puerto `localhost:N` en cualquier fichero del proyecto que el compose no publique. Es exactamente la deriva que ya pasó.
 
+## La trampa de `env_file`: cómo se rompe el arranque sin `.env`
+
+Un servicio que se construye del repositorio necesita sus variables. La forma obvia rompe el contrato:
+
+```yaml
+# MAL. Si no hay .env --y no lo hay en un clon limpio ni en la CI--
+# `docker compose up` falla antes de arrancar nada.
+env_file: .env
+```
+
+`.env` está en `.gitignore`, así que **no existe en una máquina recién clonada**, que es justo el caso que la regla 7 promete. La forma correcta lo declara opcional:
+
+```yaml
+    env_file:
+      - path: .env
+        required: false     # sin él, valen los valores de abajo
+    environment:
+      DATABASE_URL: postgres://alivia_app:${POSTGRES_CONTRASENA:-desarrollo}@postgres:5432/alivia
+      TZ: America/Bogota
+```
+
+Dos cosas más de esa misma lista:
+
+- **`environment` gana sobre `env_file`.** Las URLs de dentro de la red de contenedores van en `environment`, porque el anfitrión es el nombre del servicio y no `localhost`. Si vinieran del `.env` de la máquina, apuntarían a `localhost` y no resolverían.
+- **`TZ: America/Bogota`**, como ya lo lleva postgres. Sin eso, una fecha civil puede desplazarse un día al serializarse — decisión 3 de `docs/arquitectura.md`.
+
 ## Dónde vive cada valor
 
 Un valor, un sitio. Los demás lo leen del entorno.

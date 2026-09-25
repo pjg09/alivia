@@ -188,6 +188,19 @@ def main() -> int:
                   f"quien clone el repositorio no tendra esa pieza corriendo "
                   f"(ver docs/ambiente.md)")
 
+    # La disposicion decidida es api/ y web/ (decision 0 de docs/arquitectura.md),
+    # pero la regla no puede depender de que se respete: un servidor puesto en la
+    # RAIZ del repositorio no lo detectaba el bucle de arriba, y la regla 7 se
+    # quedaba en letra muerta justo en la tarea 1. Comprobado: con src/datos/ y un
+    # Dockerfile en la raiz, este script devolvia 0.
+    if (RAIZ / "Dockerfile").exists() or (RAIZ / "src").is_dir():
+        que = "Dockerfile" if (RAIZ / "Dockerfile").exists() else "src/"
+        comprobar("." in construidos,
+                  f"hay un componente en la raiz ({que}) y el compose lo construye",
+                  f"hay un componente en la raiz del repositorio ({que}) y ningun "
+                  f"servicio del compose lo construye con «build: .». La disposicion "
+                  f"decidida es api/ y web/: ver la decision 0 de docs/arquitectura.md")
+
     for df in sorted(RAIZ.glob("*/Dockerfile")):
         if df.parent.name in NO_COMPONENTES:
             continue

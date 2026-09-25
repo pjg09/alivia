@@ -20,12 +20,33 @@ Estas seis son las que el backlog da por supuestas y que, sin escribirlas, cuatr
 
 ---
 
+## 0 · El servidor es `api/` y la interfaz `web/`, como paquetes separados
+
+Esta sí es una decisión de estructura de carpetas, y está aquí porque **de ella depende que la regla 7 se pueda comprobar**. Las demás decisiones de disposición siguen siendo de quien tome la tarea.
+
+```
+alivia/
+├── package.json        ← raíz: espacios de trabajo, herramientas comunes
+├── api/                ← servidor. Su propio package.json y su Dockerfile
+│   └── src/datos/      ← el único sitio que conoce el pool (decisión 1)
+├── web/                ← interfaz. Su propio package.json y su Dockerfile
+└── avisos/             ← si el proceso de avisos no vive dentro de api/ (decisión 5)
+```
+
+**Por qué separados y no un `src/` en la raíz:**
+
+- **Los árboles de dependencias no se mezclan.** La imagen del servidor no instala React, y la de la interfaz no instala `pg`. Con un solo `package.json` en la raíz, las dos imágenes cargan todo.
+- **`scripts/verificar-arranque.py` detecta los componentes por directorio de primer nivel.** Un servidor en la raíz no lo detectaba, así que la regla 7 —«el compose levanta todo»— era letra muerta justo en la tarea 1. El hueco se cerró además por el otro lado: un `Dockerfile` o un `src/` en la raíz también exigen su servicio. Pero la disposición decidida es esta.
+- Cada paquete declara su propio `test`, y la raíz los agrega.
+
+---
+
 ## 1 · La transacción la abre el caso de uso, nunca un repositorio
 
 **Una petición HTTP es una transacción.** La abre el caso de uso; un repositorio no puede abrirla porque no tiene con qué.
 
 ```ts
-// src/datos/contexto.ts — el ÚNICO fichero que conoce el pool
+// api/src/datos/contexto.ts — el ÚNICO fichero que conoce el pool
 export type Tx = { readonly __tx: unique symbol; query(...): ... }
 
 export async function conUsuario<T>(
@@ -178,7 +199,7 @@ Una regla que no se pone roja se rompe sin que nadie se entere. Cada comprobaci�
 
 | # | Decisión | Comprobación | Con la tarea |
 |---|---|---|---|
-| 1 | La transacción la abre el caso de uso | Ningún fichero fuera de `src/datos/` importa `pg` | 3 |
+| 1 | La transacción la abre el caso de uso | Ningún fichero fuera de `api/src/datos/` importa `pg` | 3 |
 | 1 | Las dos variables de sesión | Una consulta con fecha inyectada devuelve lo que corresponde a esa fecha | 3 |
 | 2 | El rol de avisos no está en el servidor | `DATABASE_URL_AVISOS` solo aparece en el módulo de avisos, `.env.example` y el compose | 31 |
 | 3 | Fechas civiles como cadena | Un vencimiento pedido por HTTP encaja en `^\d{4}-\d{2}-\d{2}$` | 22 |
@@ -188,4 +209,4 @@ Una regla que no se pone roja se rompe sin que nadie se entere. Cada comprobaci�
 
 ## Lo que este documento no decide, a propósito
 
-Estructura de carpetas más allá de `src/datos/`, biblioteca de validación, gestión de estado en la interfaz, formato del registro. Son decisiones reversibles y baratas: quien tome la tarea las toma. Lo de arriba no es reversible ni barato, y por eso está escrito.
+Estructura de carpetas por dentro de `api/` y `web/` más allá de `api/src/datos/`, biblioteca de validación, gestión de estado en la interfaz, formato del registro. Son decisiones reversibles y baratas: quien tome la tarea las toma. Lo de arriba no es reversible ni barato, y por eso está escrito.
