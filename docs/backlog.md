@@ -2,7 +2,7 @@
 
 De donde está el proyecto hoy hasta la aplicación completa.
 
-**El orden es una dependencia, no una sugerencia.** Leyendo de arriba abajo, ninguna tarea depende de otra posterior: la columna `Dep.` solo contiene números menores al de su propia fila. Eso lo comprueba un script, no la buena fe:
+**El orden es una dependencia, no una sugerencia.** Leyendo de arriba abajo, ninguna tarea depende de otra que aparezca más abajo. Se mide por **posición**, no por número: los identificadores son estables y no se renumeran, así que reordenar el trabajo es mover la fila. Eso lo comprueba un script, no la buena fe:
 
 ```bash
 python3 scripts/verificar-backlog.py
@@ -31,14 +31,14 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 
 | # | Tarea | Hecho cuando | Dep. |
 |---|---|---|---|
-| 1 | Proyecto del servidor: TypeScript, estructura de carpetas, script de arranque en desarrollo | `npm run dev` levanta un proceso que compila y recarga | — |
-| 2 | Configuración leída del entorno y **validada al arrancar** | Falta una variable obligatoria y el proceso muere con un mensaje que dice cuál, en lugar de fallar más tarde | 1 |
+| 1 | Proyecto del servidor en **`api/`**, con TypeScript y script de arranque en desarrollo | `npm run dev` levanta un proceso que compila y recarga. El servidor va en `api/` y la interfaz en `web/`, como paquetes separados — decisión 0 de `docs/arquitectura.md`. Y el servicio entra en `docker-compose.yml` **en el mismo cambio**, o `scripts/verificar-arranque.py` se pone rojo | — |
+| 8 | Convenciones de código y formato automático | El formateador corre igual en las cuatro máquinas y no genera ruido en los diffs. **Va de segunda a propósito**: cuatro personas sin formateador generan ruido en los diffs desde el primer día, y el cambio que lo introduce después toca todos los ficheros a la vez | 1 |
+| 2 | Configuración leída del entorno y **validada al arrancar** | Falta una variable obligatoria y el proceso muere con un mensaje que dice cuál, en lugar de fallar más tarde. Y **rechaza explícitamente los valores de plantilla**: arrancar con `JWT_SECRETO=cambiar-en-cada-maquina` mata el proceso, porque un secreto que está en el repositorio no es un secreto. Son **dos esquemas distintos**, el del servidor y el del proceso de avisos, y el del servidor no declara `DATABASE_URL_AVISOS` — decisión 2 de `docs/arquitectura.md` | 1 |
 | 3 | Acceso a datos: pool de conexiones y función `conUsuario()` que abre transacción, fija `alivia.usuario_id` y la cierra | Toda consulta de datos de usuario pasa por ahí. Intentar consultar fuera de una transacción con contexto es imposible por construcción, no por disciplina | 2 |
 | 4 | Arnés de pruebas con esquema efímero: cada prueba corre contra una base limpia | `npm test` aplica migraciones y semillas desde cero y deja la base como la encontró. **Definir ese script en `package.json` basta para que la integración continua lo ejecute**: no hay que tocar el flujo de trabajo | 3 |
 | 5 | Las trece comprobaciones de `db/pruebas/rls.sql` portadas a la capa de datos de la aplicación | `npm test` falla si alguien conecta con el rol equivocado o pierde el contexto de transacción | 4 |
 | 6 | Manejo de errores HTTP y registro de peticiones | Un error no controlado devuelve un código y un cuerpo coherentes, y **nunca** filtra detalles internos ni datos de usuario | 1 |
 | 7 | Servidor Express con endpoint de salud | `GET /salud` responde y reporta si la base de datos y el correo están accesibles | 2, 6 |
-| 8 | Convenciones de código y formato automático | El formateador corre igual en las cuatro máquinas y no genera ruido en los diffs | 1 |
 
 ---
 
@@ -46,7 +46,7 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 
 | # | Tarea | Hecho cuando | Dep. |
 |---|---|---|---|
-| 9 | Hash y verificación de contraseña con Argon2 | Una contraseña correcta verifica, una incorrecta no, y el hash nunca sale en un registro ni en una respuesta | 4 |
+| 9 | Hash y verificación de contraseña con Argon2, con **`@node-rs/argon2`** | Una contraseña correcta verifica, una incorrecta no, y el hash nunca sale en un registro ni en una respuesta. La biblioteca es `@node-rs/argon2`, con binarios precompilados, y no `argon2`, que exige node-gyp y herramientas de compilación en las cuatro máquinas | 4 |
 | 10 | Token de sesión: emisión y verificación | Un token válido identifica al usuario; uno manipulado, caducado o firmado con otra clave se rechaza | 2, 4 |
 | 11 | Registro de usuario, vía `app.registrar_usuario()` | Crea la cuenta, **deja constancia de la autorización de tratamiento en la misma transacción** y activa los tres módulos gratuitos | 3, 7, 9, 10 |
 | 12 | Ingreso, vía `app.credenciales_por_correo()` | Devuelve sesión con credenciales correctas. Con correo inexistente o contraseña errada, la respuesta y el tiempo de respuesta son indistinguibles entre sí | 3, 7, 9, 10 |
