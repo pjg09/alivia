@@ -2,6 +2,12 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.3.0](https://github.com/pjg09/alivia/compare/v0.2.2...v0.3.0) (2026-09-25)
+
+### Funcionalidad
+
+* **api:** esqueleto del servidor en api/, con su servicio en el compose ([5ba0e87](https://github.com/pjg09/alivia/commit/5ba0e87b8a0e44bc4cee077733f1a6e2ebca8f2e))
+
 ## [0.2.2](https://github.com/pjg09/alivia/compare/v0.2.1...v0.2.2) (2026-09-25)
 
 ### Correcciones
