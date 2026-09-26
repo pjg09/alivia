@@ -1,19 +1,17 @@
 // Punto de entrada del servidor.
 //
-// Tarea 1 del backlog: el esqueleto. Deliberadamente no hace nada más, y cada
-// cosa que falta tiene su tarea y su sitio:
+// Lo que falta, y dónde:
 //
-//   configuracion/  leer y validar el entorno al arrancar        tarea 2
-//   datos/          el pool y conUsuario(): el ÚNICO sitio que
-//                   conoce la conexión (decisión 1)              tarea 3
-//   http/           Express, manejo de errores y /salud de
-//                   verdad, con el estado de la base y el correo tareas 6 y 7
-//   dominio/        cálculo de vencimientos, avisos              tarea 19 y siguientes
+//   datos/     el pool y conUsuario(): el ÚNICO sitio que conoce la conexión
+//              (decisión 1)                                        tarea 3
+//   http/      Express y el estado real de /salud, con la base y el correo
+//              comprobados de verdad                               tareas 7
+//   dominio/   cálculo de vencimientos, selección de avisos    tarea 19 y ss.
 //
-// Este listener existe por una razón concreta, no de adorno: el servicio del
-// compose necesita un healthcheck, y sin algo que responda no hay forma de que
-// `up --wait` sepa que el proceso arrancó. La tarea 7 lo reemplaza por Express
-// y hace que /salud informe de verdad.
+// El servidor es todavía `node:http` y no Express: eso llega en la tarea 7. Lo
+// que sí está terminado es la POLÍTICA de errores y el registro --tarea 6--, que
+// vive en http/ y no depende de ningún marco, así que la tarea 7 solo la
+// conecta.
 
 import { createServer } from "node:http";
 import { ErrorDeConfiguracion } from "./configuracion/entorno.js";
@@ -22,6 +20,8 @@ import {
   cargarConfiguracionServidor,
   resumir,
 } from "./configuracion/servidor.js";
+import { ErrorDeAplicacion, identificar, rutaNoEncontrada, traducir } from "./http/errores.js";
+import { partirDireccion, registrarError, registrarPeticion } from "./http/registro.js";
 
 // La configuracion se valida ANTES de abrir el puerto: si falta una variable
 // obligatoria el proceso muere aqui, diciendo cual, en lugar de arrancar y
@@ -42,22 +42,66 @@ for (const aviso of avisosDeArranque(configuracion)) console.warn(`[alivia/api] 
 
 const PUERTO = configuracion.puerto;
 
-const servidor = createServer((peticion, respuesta) => {
-  if (peticion.url === "/salud") {
-    respuesta.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-    respuesta.end(
-      JSON.stringify({
+/**
+ * Lo que responde cada ruta. Devuelve el cuerpo o LANZA: nadie construye una
+ * respuesta de error por su cuenta, porque el cuerpo lo da un solo sitio
+ * (decisión 4 de docs/arquitectura.md).
+ */
+function atender(ruta: string): { estado: number; cuerpo: unknown } {
+  if (ruta === "/salud") {
+    return {
+      estado: 200,
+      cuerpo: {
         estado: "arrancado",
         // Honesto a propósito: todavía no comprueba nada. Tarea 7.
         comprueba: [],
         nota: "esqueleto de la tarea 1: no verifica la base de datos ni el correo",
-      }),
+      },
+    };
+  }
+  throw rutaNoEncontrada();
+}
+
+const servidor = createServer((peticion, respuesta) => {
+  const comenzo = process.hrtime.bigint();
+  const identificador = identificar();
+  const { ruta, nombresDeConsulta } = partirDireccion(peticion.url ?? "/");
+
+  let estado: number;
+  let cuerpo: unknown;
+
+  try {
+    const resultado = atender(ruta);
+    estado = resultado.estado;
+    cuerpo = resultado.cuerpo;
+  } catch (error) {
+    // Aquí acaba TODO lo que se lance, conocido o no. Sin este punto único, un
+    // TypeError sale al cliente con la forma interna del servidor dentro.
+    const traducido = traducir(error, identificador);
+    estado = traducido.estado;
+    cuerpo = traducido.cuerpo;
+    registrarError(
+      identificador,
+      traducido.paraElRegistro,
+      traducido.inesperado,
+      error instanceof ErrorDeAplicacion && error.detalle !== undefined,
     );
-    return;
   }
 
-  respuesta.writeHead(404, { "content-type": "application/json; charset=utf-8" });
-  respuesta.end(JSON.stringify({ error: { codigo: "NO_ENCONTRADO", mensaje: "No existe" } }));
+  respuesta.writeHead(estado, {
+    "content-type": "application/json; charset=utf-8",
+    "x-alivia-peticion": identificador,
+  });
+  respuesta.end(JSON.stringify(cuerpo));
+
+  registrarPeticion({
+    metodo: peticion.method ?? "?",
+    ruta,
+    nombresDeConsulta,
+    estado,
+    milisegundos: Number((process.hrtime.bigint() - comenzo) / 1_000_000n),
+    identificador,
+  });
 });
 
 // Un puerto ocupado es el primer tropiezo en una maquina nueva. Que diga qué

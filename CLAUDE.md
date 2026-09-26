@@ -136,7 +136,9 @@ Hay ambiente, esquema, catálogo sembrado y el **esqueleto del servidor** en `ap
 
 **No hay lógica todavía**: ni configuración validada, ni acceso a datos, ni interfaz, ni pruebas de la aplicación. `/salud` responde `arrancado` y no comprueba nada, a propósito.
 
-Tareas **1, 2 y 8 hechas**. Lo siguiente: la **6** (errores HTTP), que solo depende de la 1, y después la **3**, `conUsuario()`, que es de donde cuelga la regla 1 y la más importante del proyecto.
+Tareas **1, 2, 6 y 8 hechas**. Lo siguiente es la **3**, `conUsuario()`: es de donde cuelga la regla 1 y la más importante del proyecto.
+
+La política de errores y el registro están en `api/src/http/`, sin depender de ningún marco: un manejador **lanza** y un solo sitio traduce. `npm run errores` imprime el catálogo de códigos. Express llega con la tarea 7 y solo tiene que conectarlo.
 
 La configuración se valida al arrancar y son **dos esquemas**: `api/src/configuracion/servidor.ts` y `avisos.ts`. El del servidor no declara `DATABASE_URL_AVISOS`, y eso no es una convención: lo comprueban `scripts/verificar-arquitectura.py` y `scripts/verificar-configuracion.py`. `npm run configuracion` valida sin arrancar nada.
 

@@ -31,8 +31,14 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 # explica por que, en lugar de que la regla se erosione sin que nadie lo note.
 SOLO_DATOS = ("api/src/datos",)
 SOLO_AVISOS = ("api/src/configuracion/avisos.ts", "api/src/avisos", "avisos/src")
+SOLO_ERRORES = ("api/src/http/errores.ts",)
 
 IMPORTA_PG = re.compile(r"""(?:from|require\()\s*['"]pg(?:['"/])""")
+
+# El cuerpo de error, construido a mano. Es por donde se escapa el mensaje de
+# psql con la cadena de conexion, o el «Key (correo)=(...) already exists» que
+# confirma que un correo esta registrado. Decision 4 de docs/arquitectura.md.
+FORMATEA_ERROR = re.compile(r"""["']?error["']?\s*:\s*\{\s*["']?codigo""")
 
 BLOQUE = re.compile(r"/\*.*?\*/", re.S)
 
@@ -82,6 +88,7 @@ def main() -> int:
     revisados = 0
     infractores_pg = []
     infractores_avisos = []
+    infractores_error = []
 
     for rel, texto in fuentes():
         revisados += 1
@@ -91,6 +98,9 @@ def main() -> int:
 
         if "DATABASE_URL_AVISOS" in texto and not permitido(rel, SOLO_AVISOS):
             infractores_avisos.append(rel)
+
+        if FORMATEA_ERROR.search(texto) and not permitido(rel, SOLO_ERRORES):
+            infractores_error.append(rel)
 
     comprobar(revisados > 0,
               f"se revisaron {revisados} fichero(s) de TypeScript",
@@ -109,6 +119,14 @@ def main() -> int:
               f"{', '.join(infractores_avisos)}. Ese rol lee las obligaciones de TODOS los "
               f"usuarios; en el proceso que atiende peticiones anula el aislamiento sin dar "
               f"un solo error (decision 2 de docs/arquitectura.md)")
+
+    comprobar(not infractores_error,
+              f"solo {'/'.join(SOLO_ERRORES)} da forma a una respuesta de error",
+              f"estos ficheros construyen el cuerpo de un error a mano: "
+              f"{', '.join(infractores_error)}. Por ahi se escapa el mensaje de psql con la "
+              f"cadena de conexion, o el «Key (correo)=(...) already exists» que confirma que "
+              f"un correo esta registrado. Lanzar un ErrorDeAplicacion y dejar que lo traduzca "
+              f"un solo sitio (decision 4 de docs/arquitectura.md)")
 
     # El esquema del servidor tiene que seguir sin declararla: es su criterio de
     # aceptacion en la tarea 2, no una consecuencia agradable.

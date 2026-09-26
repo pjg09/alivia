@@ -143,10 +143,10 @@ Solo lo que cuatro personas inventarían distinto.
 **a) Errores, un único cuerpo.** Lo da forma el middleware de la tarea 6, y **solo** ese sitio.
 
 ```json
-{ "error": { "codigo": "OBLIGACION_NO_ENCONTRADA", "mensaje": "…" } }
+{ "error": { "codigo": "OBLIGACION_NO_ENCONTRADA", "mensaje": "…", "identificador": "a1b2c3d4e5" } }
 ```
 
-`codigo` estable, en mayúsculas con guion bajo, para que la interfaz decida sin leer texto. `mensaje` legible para el usuario. Nunca el texto de psql, nunca una traza, nunca el dato de otro usuario.
+`codigo` estable, en mayúsculas con guion bajo, para que la interfaz decida sin leer texto. `mensaje` legible para el usuario. `identificador` aleatorio, que es lo que une lo que vio la persona con la línea del registro. Nunca el texto de psql, nunca una traza, nunca el dato de otro usuario.
 
 | Código | Cuándo |
 |---|---|
@@ -224,7 +224,7 @@ Una regla que no se pone roja se rompe sin que nadie se entere. Cada comprobaci�
 | 1 | Las dos variables de sesión | Una consulta con fecha inyectada devuelve lo que corresponde a esa fecha. La fecha ya se lee y valida en la configuración | 3 |
 | 2 | El rol de avisos no está en el servidor | `DATABASE_URL_AVISOS` solo aparece en el módulo de avisos, y el esquema del servidor no lo declara — **`scripts/verificar-arquitectura.py` y `scripts/verificar-configuracion.py`, ya escritos** | 2 |
 | 3 | Fechas civiles como cadena | Un vencimiento pedido por HTTP encaja en `^\d{4}-\d{2}-\d{2}$` | 22 |
-| 4 | Un solo sitio da forma a los errores | Ningún fichero de rutas contiene `res.status(…).json({ error` | 6 |
+| 4 | Un solo sitio da forma a los errores | Ningún fichero fuera de `api/src/http/errores.ts` construye el cuerpo, y ocho valores hostiles pasan por la frontera sin filtrar nada — **`verificar-arquitectura.py` y `verificar-errores.py`, ya escritos** | 6 |
 | 5 | Un servicio propio para avisos | `scripts/verificar-arranque.py`, ya escrito, lo exige al aparecer el directorio | 35 |
 | 6 | El snapshot no se mueve | Prueba SQL: cambiar el catálogo no altera una obligación ya creada | 20 |
 
