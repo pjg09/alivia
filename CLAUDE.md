@@ -136,7 +136,9 @@ Hay ambiente, esquema, catálogo sembrado y el **esqueleto del servidor** en `ap
 
 **No hay lógica todavía**: ni configuración validada, ni acceso a datos, ni interfaz, ni pruebas de la aplicación. `/salud` responde `arrancado` y no comprueba nada, a propósito.
 
-Tareas **1 y 8 hechas**. Lo siguiente, dos en paralelo porque solo dependen de la 1: la **2** (configuración validada) y la **6** (errores HTTP). Después la **3**, `conUsuario()`, que es de donde cuelga la regla 1 y la más importante del proyecto.
+Tareas **1, 2 y 8 hechas**. Lo siguiente: la **6** (errores HTTP), que solo depende de la 1, y después la **3**, `conUsuario()`, que es de donde cuelga la regla 1 y la más importante del proyecto.
+
+La configuración se valida al arrancar y son **dos esquemas**: `api/src/configuracion/servidor.ts` y `avisos.ts`. El del servidor no declara `DATABASE_URL_AVISOS`, y eso no es una convención: lo comprueban `scripts/verificar-arquitectura.py` y `scripts/verificar-configuracion.py`. `npm run configuracion` valida sin arrancar nada.
 
 **Antes de escribir la primera línea del servidor, leer `docs/arquitectura.md`.** Las decisiones 1 a 4 son justo las que toman las tareas 1, 3, 6 y 7, y están tomadas ya: quién abre la transacción, qué rol no puede existir en el proceso que atiende peticiones, cómo cruza una fecha civil el JSON y qué forma tiene un error HTTP.
 

@@ -16,11 +16,31 @@
 // y hace que /salud informe de verdad.
 
 import { createServer } from "node:http";
+import { ErrorDeConfiguracion } from "./configuracion/entorno.js";
+import {
+  avisosDeArranque,
+  cargarConfiguracionServidor,
+  resumir,
+} from "./configuracion/servidor.js";
 
-// Dentro del contenedor siempre es 3000; PUERTO mueve el que se publica en la
-// maquina, igual que PUERTO_POSTGRES con la base de datos. La validacion de
-// verdad de esta variable llega con la tarea 2.
-const PUERTO = Number(process.env.PUERTO ?? 3000);
+// La configuracion se valida ANTES de abrir el puerto: si falta una variable
+// obligatoria el proceso muere aqui, diciendo cual, en lugar de arrancar y
+// fallar mas tarde en otro sitio. Tarea 2.
+let configuracion: ReturnType<typeof cargarConfiguracionServidor>;
+try {
+  configuracion = cargarConfiguracionServidor();
+} catch (error) {
+  if (error instanceof ErrorDeConfiguracion) {
+    console.error(error.informe());
+    process.exit(1);
+  }
+  throw error;
+}
+
+for (const linea of resumir(configuracion)) console.log(`[alivia/api] ${linea}`);
+for (const aviso of avisosDeArranque(configuracion)) console.warn(`[alivia/api] AVISO: ${aviso}`);
+
+const PUERTO = configuracion.puerto;
 
 const servidor = createServer((peticion, respuesta) => {
   if (peticion.url === "/salud") {

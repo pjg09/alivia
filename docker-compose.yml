@@ -156,6 +156,9 @@ services:
       DATABASE_URL: postgres://alivia_app:${POSTGRES_CONTRASENA:-desarrollo}@postgres:5432/alivia
       SMTP_HOST: mailpit
       SMTP_PUERTO: 1025
+      # Una a una y por su nombre, nunca el .env entero. Vacia cuenta como
+      # ausente, asi que sin definirla el servidor usa la fecha real.
+      FECHA_REFERENCIA: ${FECHA_REFERENCIA:-}
     ports:
       - "${PUERTO:-3000}:3000"
     healthcheck:

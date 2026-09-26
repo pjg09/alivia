@@ -14,6 +14,7 @@
     "dev": "npm run dev --workspace @alivia/api",
     "build": "npm run build --workspaces --if-present",
     "tipos": "npm run tipos --workspaces --if-present",
+    "configuracion": "tsx api/src/configuracion/comprobar.ts",
     "formato": "biome check --write",
     "formato:comprobar": "biome check",
     "verificar:backlog": "python3 scripts/verificar-backlog.py",
