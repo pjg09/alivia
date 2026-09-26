@@ -128,6 +128,24 @@ def main() -> int:
               f"un correo esta registrado. Lanzar un ErrorDeAplicacion y dejar que lo traduzca "
               f"un solo sitio (decision 4 de docs/arquitectura.md)")
 
+    # El pool no se exporta: es lo que hace que no haya otra puerta a los datos.
+    contexto = RAIZ / "api/src/datos/contexto.ts"
+    if contexto.exists():
+        codigo = sin_comentarios(contexto.read_text(encoding="utf-8"))
+        comprobar(re.search(r"export\s+(const|let|var|function)\s+pool\b", codigo) is None
+                  and "export { pool" not in codigo
+                  and "export default pool" not in codigo,
+                  "el pool de conexiones no se exporta",
+                  "contexto.ts exporta el pool. Entonces cualquiera puede pedir una conexion "
+                  "y consultar fuera de una transaccion con contexto, y las politicas RLS "
+                  "comparan contra NULL: cero filas, sin error (decision 1)")
+
+        comprobar("declare const marcaDeTransaccion: unique symbol" in codigo,
+                  "el tipo Tx lleva una marca que no sale de contexto.ts",
+                  "el tipo Tx ya no lleva la marca con simbolo unico: sin ella el compilador "
+                  "deja fabricar un Tx a mano, y consultar sin contexto vuelve a depender de "
+                  "la disciplina en lugar de ser imposible")
+
     # El esquema del servidor tiene que seguir sin declararla: es su criterio de
     # aceptacion en la tarea 2, no una consecuencia agradable.
     servidor = RAIZ / "api/src/configuracion/servidor.ts"

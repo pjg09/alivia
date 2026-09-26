@@ -15,15 +15,26 @@ COPY api/tsconfig.json ./api/
 COPY api/src ./api/src
 RUN npm run build --workspace @alivia/api
 
+# --- Dependencias de ejecucion, sin las de desarrollo ------------------------
+# Aparte del build a proposito: asi la imagen final no lleva TypeScript, tsx ni
+# Biome, que no hacen falta para correr y son la mayor parte del peso.
+FROM node:24-alpine AS dependencias
+WORKDIR /alivia
+COPY package.json package-lock.json ./
+COPY api/package.json ./api/
+RUN npm ci --omit=dev
+
 # --- Imagen final ------------------------------------------------------------
-# El servidor no tiene dependencias de ejecucion todavia, solo la biblioteca
-# estandar de Node, asi que aqui no entra ni un node_modules. Cuando entre la
-# primera (pg, en la tarea 3) hay que copiar tambien las de produccion.
 FROM node:24-alpine
 WORKDIR /alivia/api
 ENV NODE_ENV=production
 ENV PUERTO=3000
 
+# Los espacios de trabajo suben las dependencias a la raiz, y `node` las
+# resuelve hacia arriba desde /alivia/api.
+COPY --from=dependencias /alivia/node_modules /alivia/node_modules
+COPY --from=dependencias /alivia/package.json /alivia/package.json
+COPY --from=construccion /alivia/api/package.json ./package.json
 COPY --from=construccion /alivia/api/dist ./dist
 
 USER node

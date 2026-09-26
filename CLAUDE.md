@@ -132,11 +132,13 @@ Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que corre
 
 ## Estado actual
 
-Hay ambiente, esquema, catálogo sembrado y el **esqueleto del servidor** en `api/`: TypeScript, `npm run dev` con recarga, y su servicio en el compose con `/salud` respondiendo. Y formato automático con Biome, idéntico en las cuatro máquinas.
+Hay ambiente, esquema, catálogo sembrado y los **cimientos del servidor** en `api/`: TypeScript con `npm run dev` y recarga, formato automático con Biome, configuración validada al arrancar, acceso a datos con `conUsuario()`, y la política de errores y el registro de peticiones.
 
-**No hay lógica todavía**: ni configuración validada, ni acceso a datos, ni interfaz, ni pruebas de la aplicación. `/salud` responde `arrancado` y no comprueba nada, a propósito.
+**Lo que falta de la fase 0**: el arnés de pruebas (tarea 4), las trece comprobaciones de RLS portadas (5) y Express con el `/salud` de verdad (7). Hoy `/salud` responde `arrancado` y **declara que no comprueba nada**, a propósito. No hay interfaz ni `npm test`.
 
-Tareas **1, 2, 6 y 8 hechas**. Lo siguiente es la **3**, `conUsuario()`: es de donde cuelga la regla 1 y la más importante del proyecto.
+Tareas **1, 2, 3, 6 y 8 hechas**. Lo siguiente es la **4**, el arnés de pruebas con esquema efímero, y con ella `npm test` empieza a correr en la integración continua.
+
+**La regla 1 ya está construida, no prometida.** `api/src/datos/contexto.ts` es el único fichero que conoce el pool: `conUsuario(usuarioId, tx => …)` abre la transacción, fija `alivia.usuario_id` y `alivia.fecha_referencia` dentro de ella y cierra. El pool no se exporta, y `Tx` lleva una marca con un símbolo que no sale de ahí, así que **el compilador rechaza fabricar uno**. Anidar lanza, un `Tx` guardado no sirve después, y `npm run datos` lo ejercita contra la base real.
 
 La política de errores y el registro están en `api/src/http/`, sin depender de ningún marco: un manejador **lanza** y un solo sitio traduce. `npm run errores` imprime el catálogo de códigos. Express llega con la tarea 7 y solo tiene que conectarlo.
 

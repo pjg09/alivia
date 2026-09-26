@@ -20,6 +20,7 @@ import {
   cargarConfiguracionServidor,
   resumir,
 } from "./configuracion/servidor.js";
+import { cerrarAcceso, iniciarAcceso } from "./datos/contexto.js";
 import { ErrorDeAplicacion, identificar, rutaNoEncontrada, traducir } from "./http/errores.js";
 import { partirDireccion, registrarError, registrarPeticion } from "./http/registro.js";
 
@@ -39,6 +40,13 @@ try {
 
 for (const linea of resumir(configuracion)) console.log(`[alivia/api] ${linea}`);
 for (const aviso of avisosDeArranque(configuracion)) console.warn(`[alivia/api] AVISO: ${aviso}`);
+
+// El pool se crea una vez, al arrancar. Ningun otro fichero puede pedir una
+// conexion: el pool no se exporta (decision 1 de docs/arquitectura.md).
+iniciarAcceso({
+  url: configuracion.urlBaseDeDatos,
+  fechaReferencia: configuracion.fechaReferencia,
+});
 
 const PUERTO = configuracion.puerto;
 
@@ -127,6 +135,10 @@ servidor.listen(PUERTO, () => {
 for (const senal of ["SIGTERM", "SIGINT"] as const) {
   process.on(senal, () => {
     console.log(`[alivia/api] ${senal}: cerrando`);
-    servidor.close(() => process.exit(0));
+    servidor.close(() => {
+      // Sin esto, las conexiones abiertas quedan colgando en la base hasta que
+      // el motor las expira, y un reinicio rapido agota el limite.
+      void cerrarAcceso().then(() => process.exit(0));
+    });
   });
 }

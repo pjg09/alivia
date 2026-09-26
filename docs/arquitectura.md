@@ -47,7 +47,8 @@ alivia/
 
 ```ts
 // api/src/datos/contexto.ts — el ÚNICO fichero que conoce el pool
-export type Tx = { readonly __tx: unique symbol; query(...): ... }
+declare const marcaDeTransaccion: unique symbol;   // no se exporta
+export type Tx = { readonly [marcaDeTransaccion]: true; consultar(...): ... }
 
 export async function conUsuario<T>(
   usuarioId: string,
@@ -220,8 +221,8 @@ Una regla que no se pone roja se rompe sin que nadie se entere. Cada comprobaci�
 
 | # | Decisión | Comprobación | Con la tarea |
 |---|---|---|---|
-| 1 | La transacción la abre el caso de uso | Ningún fichero fuera de `api/src/datos/` importa `pg` — **`scripts/verificar-arquitectura.py`, ya escrito** | 2 |
-| 1 | Las dos variables de sesión | Una consulta con fecha inyectada devuelve lo que corresponde a esa fecha. La fecha ya se lee y valida en la configuración | 3 |
+| 1 | La transacción la abre el caso de uso | Ningún fichero fuera de `api/src/datos/` importa `pg`, el pool no se exporta, y `tsc` rechaza un `Tx` fabricado a mano — **`verificar-arquitectura.py` y `verificar-datos.py`, hechos** | 3 |
+| 1 | Las dos variables de sesión | `conUsuario()` fija las dos y se comprueba contra la base que `app.usuario_actual()` las vea, que se deshagan al cerrar y que la conexión vuelva limpia al pool — **`verificar-datos.py`, hecho** | 3 |
 | 2 | El rol de avisos no está en el servidor | `DATABASE_URL_AVISOS` solo aparece en el módulo de avisos, y el esquema del servidor no lo declara — **`scripts/verificar-arquitectura.py` y `scripts/verificar-configuracion.py`, ya escritos** | 2 |
 | 3 | Fechas civiles como cadena | Un vencimiento pedido por HTTP encaja en `^\d{4}-\d{2}-\d{2}$` | 22 |
 | 4 | Un solo sitio da forma a los errores | Ningún fichero fuera de `api/src/http/errores.ts` construye el cuerpo, y ocho valores hostiles pasan por la frontera sin filtrar nada — **`verificar-arquitectura.py` y `verificar-errores.py`, ya escritos** | 6 |
