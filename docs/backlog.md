@@ -93,7 +93,7 @@ Las tres capas —evaluación, envío y disparador— y por qué el disparador e
 | # | Tarea | Hecho cuando | Dep. |
 |---|---|---|---|
 | 28 | Cliente SMTP hacia Mailpit | Un correo de prueba sale del proceso y aparece en la bandeja de `localhost:8025`. El camino completo ya está verificado con `scripts/verificar-mailpit.py` | 2, 4 |
-| 29 | Plantilla del correo de aviso: qué vence, cuándo, de qué módulo y qué pasa si no se cumple | El correo se lee bien en texto plano, no solo en HTML | 28 |
+| 29 | Plantilla del correo de aviso: qué vence, cuándo, de qué módulo y qué pasa si no se cumple | El correo se lee bien en texto plano, no solo en HTML. **Es lo primero que un usuario ve de Alivia**, antes que cualquier pantalla, así que el tono y el nombre que se fijen aquí son los que recoge el sistema visual de la tarea 70. No se decide una identidad por cada sitio | 28 |
 | 30 | Consulta de las obligaciones que vencen **dentro de la ventana de anticipación de cada usuario**, con el rol `alivia_avisos` | La consulta parte de la anticipación, no del vencimiento. Buscar lo ya vencido es avisar tarde | 3, 22 |
 | 31 | Proceso de evaluación diaria: selecciona, envía y **registra el resultado real del envío** | Un envío que falla queda como `fallido` con su error. Nada se marca `entregado` sin que el servidor SMTP lo haya aceptado | 29, 30 |
 | 32 | Idempotencia verificada: correr la evaluación dos veces el mismo día no duplica avisos | La segunda ejecución no genera correos nuevos ni filas nuevas | 31 |
@@ -124,14 +124,15 @@ No mueve dinero y no habla con ningún proveedor. Reproduce el flujo para demost
 
 ## Fase 6 · Interfaz web
 
-El alcance pide no gastar esfuerzo en decoración, con una excepción declarada: **la configuración inicial y el primer aviso son los dos momentos de verdad**. Si la carga del catálogo confunde, el usuario abandona antes de recibir un solo aviso y el producto nunca demuestra para qué sirve. Las tareas 48 a 50 son ese momento.
+El alcance pide no gastar esfuerzo en decoración, con una excepción declarada: **la configuración inicial y el primer aviso son los dos momentos de verdad**. Si la carga del catálogo confunde, el usuario abandona antes de recibir un solo aviso y el producto nunca demuestra para qué sirve. Las tareas 48 a 50 son ese momento, y la **70** es lo que les da con qué: una escala de urgencia y una distinción sancionable/recomendada que se lea sin depender del color. Está antes de la primera pantalla a propósito — definirla después obliga a improvisar estilos en el registro y a reescribirlos.
 
 | # | Tarea | Hecho cuando | Dep. |
 |---|---|---|---|
 | 44 | Proyecto de interfaz en **`web/`**, con React y Vite y proxy al servidor | `npm run dev` sirve la interfaz y las llamadas al servidor funcionan sin configurar CORS. **Crear `web/` pone la integración continua en rojo** hasta que su servicio entre en `docker-compose.yml`: `scripts/verificar-arranque.py` exige que todo directorio con `package.json` tenga el suyo. No es un estorbo, es la regla 7 funcionando — una pieza que no está en el compose es una pieza que los otros tres no tienen. Va en el mismo cambio | 7 |
+| 70 | **Sistema visual: tokens, escala de urgencia y distinción sancionable/recomendada** | Hay una paleta, una tipografía y una escala de espaciado declaradas en **un solo sitio**, y ninguna pantalla define un color propio. Dentro de eso, dos decisiones que no son decoración sino lo que la interfaz tiene que comunicar: una **escala de urgencia** según los días que faltan, y la distinción **sancionable / recomendada** resuelta con forma, texto o icono **además del color** — cerca del 8 % de los hombres tiene alguna deficiencia de visión al color, y confundir «te multan» con «conviene» es el peor error que puede cometer esta interfaz. El tono y el nombre ya los fijó el correo de la tarea 29: aquí se recogen, no se inventan otros | 44 |
 | 45 | Cliente HTTP y manejo de sesión en la interfaz | El token se guarda, se envía en cada petición y se descarta al caducar, llevando al ingreso | 12, 13, 44 |
-| 46 | Pantallas de registro e ingreso, con la autorización de tratamiento de datos explícita | No se puede crear una cuenta sin autorizar el tratamiento de forma deliberada. Una casilla premarcada no es autorización | 11, 45 |
-| 47 | Navegación y diseño base, responsivo | Se usa en un teléfono sin desplazamiento horizontal | 46 |
+| 46 | Pantallas de registro e ingreso, con la autorización de tratamiento de datos explícita | No se puede crear una cuenta sin autorizar el tratamiento de forma deliberada. Una casilla premarcada no es autorización | 11, 45, 70 |
+| 47 | Navegación y armazón de página, responsivo | Se usa en un teléfono sin desplazamiento horizontal. **El aspecto no se decide aquí**: los tokens y la paleta vienen de la 70. Aquí se resuelve el recorrido entre pantallas y la estructura que las envuelve | 46, 70 |
 | 48 | Selección de áreas de la vida a gestionar | El usuario elige entre los siete módulos y ve cuáles son gratuitos | 16, 18, 47 |
 | 49 | **Carga del catálogo al activar un área.** El momento en que se entrega el valor diferencial | Al activar «Vehículo», el usuario ve SOAT y tecnomecánica con sus plazos reales, distinguiendo lo sancionable de lo recomendado, **sin haber escrito nada** | 17, 48 |
 | 50 | Ajuste de las fechas base y alta de las obligaciones elegidas | El usuario dice cuándo compró el carro y el sistema muestra el vencimiento que calculó | 20, 49 |

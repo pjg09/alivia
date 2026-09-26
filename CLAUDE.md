@@ -143,7 +143,7 @@ Lo siguiente, tres en paralelo porque solo dependen de la 1: la **8** (formatead
 
 | Documento | Para qué |
 |---|---|
-| `docs/backlog.md` | **Qué hacer y en qué orden.** 69 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
+| `docs/backlog.md` | **Qué hacer y en qué orden.** 70 tareas, de aquí hasta la aplicación completa. Ninguna depende de otra posterior |
 | `docs/ambiente.md` | El contrato del arranque con un solo comando, y qué debe declarar cada servicio nuevo |
 | `docs/arquitectura.md` | **Las seis decisiones que el backlog da por supuestas.** Transacciones, límite del rol de avisos, fechas en el JSON, contrato HTTP, dónde corre el proceso de avisos y el snapshot del catálogo |
 | `docs/modelo-datos.md` | Por qué el esquema es como es |
