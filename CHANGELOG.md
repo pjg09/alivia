@@ -2,6 +2,12 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.5.0](https://github.com/pjg09/alivia/compare/v0.4.0...v0.5.0) (2026-09-26)
+
+### Funcionalidad
+
+* **api:** un error no controlado deja de poder filtrar nada ([b9157d9](https://github.com/pjg09/alivia/commit/b9157d925a63e6142a238113b28087f1a596e01f))
+
 ## [0.4.0](https://github.com/pjg09/alivia/compare/v0.3.0...v0.4.0) (2026-09-26)
 
 ### Funcionalidad
