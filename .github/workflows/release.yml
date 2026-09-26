@@ -36,6 +36,10 @@ jobs:
     # única forma de que el fichero no se pudra.
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Hace falta la historia para comprobar los mensajes del envío: con la
+          # profundidad 1 de por defecto, el commit anterior no es alcanzable.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
@@ -44,6 +48,22 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci || npm install
+
+      # Los mensajes DECIDEN la versión que se publica, así que no son
+      # cosmética. Esto faltaba: un encabezado de 76 caracteres llegó a main sin
+      # que nada se pusiera rojo, porque la comprobación existía en package.json
+      # y no la corría nadie. Ahora la corre la misma CI que publica.
+      - name: Comprobar los mensajes de commit
+        run: |
+          antes="${{ github.event.before }}"
+          vacio="0000000000000000000000000000000000000000"
+          if [ -z "$antes" ] || [ "$antes" = "$vacio" ] || ! git cat-file -e "$antes" 2>/dev/null
+          then
+            echo "El commit anterior no es alcanzable: se comprueba solo el último."
+            npx commitlint --last --verbose
+          else
+            npx commitlint --from "$antes" --to "${{ github.sha }}" --verbose
+          fi
 
       # Las URLs y los puertos salen del único sitio donde están documentados.
       # Antes este trabajo los declaraba en un bloque `env:`, que era una

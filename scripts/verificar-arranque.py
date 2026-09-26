@@ -280,6 +280,14 @@ def main() -> int:
     flujo = RAIZ / ".github/workflows/release.yml"
     if flujo.exists():
         t = flujo.read_text(encoding="utf-8")
+        # No es una comprobacion del ambiente, pero es el mismo fichero y el
+        # mismo tipo de grieta: la comprobacion existia en package.json y no la
+        # corria nadie, y un encabezado de 76 caracteres llego a main.
+        comprobar("commitlint" in t,
+                  "la CI comprueba los mensajes de commit",
+                  "la CI no corre commitlint: los mensajes deciden la version que se "
+                  "publica, y una comprobacion que nadie ejecuta no comprueba nada")
+
         comprobar(not re.search(r"^\s{4,}services:", t, re.M),
                   "la CI no monta un ambiente paralelo al del compose",
                   "la CI declara sus propios 'services:': eso es un segundo ambiente "
