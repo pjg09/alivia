@@ -2,6 +2,20 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.4.0](https://github.com/pjg09/alivia/compare/v0.3.0...v0.4.0) (2026-09-26)
+
+### Funcionalidad
+
+* **api:** valida la configuración al arrancar, con dos esquemas separados ([6630f50](https://github.com/pjg09/alivia/commit/6630f5022b224e2c644763882afbc737d358c4a5))
+
+### Documentación
+
+* separa el sistema visual de la navegación en la fase 6 ([8e64fb4](https://github.com/pjg09/alivia/commit/8e64fb489c37e15b6ccc53bdd69d3e78d657c56b))
+
+### Dependencias y contenedores
+
+* formato automático idéntico en las cuatro máquinas ([c0715e5](https://github.com/pjg09/alivia/commit/c0715e5d030fb931f780cef47d23a34e3ac45e69))
+
 ## [0.3.0](https://github.com/pjg09/alivia/compare/v0.2.2...v0.3.0) (2026-09-25)
 
 ### Funcionalidad
