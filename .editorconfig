@@ -1,0 +1,23 @@
+# Fuente unica de la indentacion y los finales de linea. Biome la LEE
+# (formatter.useEditorconfig en biome.json), asi que no hay dos copias de la
+# misma verdad que puedan divergir: se cambia aqui y el formateador obedece.
+#
+# Los editores de las cuatro maquinas tambien la respetan, con lo que guardar un
+# fichero no pelea con el formateador.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# PEP 8. Los verificadores del proyecto ya estan escritos asi.
+[*.py]
+indent_size = 4
+
+# En Markdown, dos espacios al final de una linea son un salto de linea.
+[*.md]
+trim_trailing_whitespace = false

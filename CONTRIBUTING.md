@@ -98,6 +98,29 @@ BREAKING CHANGE: fuente_normativa deja de significar "lo que fija la fecha".
 
 **Nada de coautoría ni enlaces de sesión de herramientas de IA.** Ni `Co-Authored-By:`, ni referencias a la sesión que generó el cambio. El historial registra qué cambió y por qué, no con qué se escribió.
 
+## Formato automático
+
+```bash
+npm run formato              # formatea y aplica las correcciones seguras
+npm run formato:comprobar    # solo dice qué hay pendiente, sin tocar nada
+```
+
+El formateador es [Biome](https://biomejs.dev), **con la versión clavada** en `package.json`. Una sola dependencia hace de formateador y de linter, y viene del repositorio: **no del complemento del editor**, que trae su propia versión y formatearía distinto.
+
+**Tres cosas hacen que el resultado sea idéntico en las cuatro máquinas**, y `scripts/verificar-formato.py` comprueba las tres:
+
+| Qué | Dónde | Por qué |
+|---|---|---|
+| La versión, exacta y sin `^` | `package.json` | Con un rango, una máquina instala 2.6 y otra 2.5, y cambian las reglas de salto de línea |
+| La indentación, en **un solo sitio** | `.editorconfig`, que Biome lee con `useEditorconfig` | Declararla dos veces es garantizar que un día divergen, y que el editor pelee con el formateador al guardar |
+| Los finales de línea en LF | `.gitattributes` | Quien trabaje en Windows convertiría ficheros enteros a CRLF, y el diff siguiente tocaría cada línea de cada fichero que abrió |
+
+También comprueba que el `$schema` de `biome.json` apunte a la versión instalada: si no, el editor valida contra unas reglas y el binario aplica otras.
+
+**Qué cubre y qué no.** Biome formatea TypeScript, JavaScript y JSON. El SQL, Python y los guiones de shell no los toca nadie automáticamente: los rige `.editorconfig` a través del editor, y Python mantiene los cuatro espacios de PEP 8, que es como ya están escritos los verificadores.
+
+**No hay gancho de pre-commit, a propósito.** Un gancho vive en `.git/` y no se versiona, así que solo lo tendría quien lo instale: da la sensación de que el formato está garantizado sin garantizarlo. Lo que lo garantiza es que la integración continua se ponga roja.
+
 ## El ambiente se actualiza en el mismo cambio
 
 **Si el cambio añade una pieza que corre, el cambio añade su servicio a `docker-compose.yml`.** No en un envío posterior, no «cuando esté más estable»: en el mismo. El contrato es que `npm run arrancar` deje el proyecto utilizable en una máquina recién clonada, y una pieza que no está ahí es una pieza que los otros tres no tienen.

@@ -1,0 +1,7 @@
+# Finales de linea LF en el repositorio, siempre. Sin esto, alguien que trabaje
+# en Windows convierte ficheros enteros a CRLF y el diff siguiente toca cada
+# linea de cada fichero que abrio, sin haber cambiado nada.
+* text=auto eol=lf
+
+# Generados: no se revisan a mano y ensucian los diffs.
+package-lock.json linguist-generated=true

@@ -106,6 +106,7 @@ npx semantic-release --dry-run                     # ¿qué versión saldría?
 ## Convenciones
 
 - **Todo en español**: identificadores, columnas, comentarios y textos de interfaz. Los tipos de commit son la excepción, por lo dicho arriba.
+- **El formato no se discute, se ejecuta**: `npm run formato`. Es Biome, con la versión clavada y la indentación en `.editorconfig` --un solo sitio--, y no el complemento del editor, que trae otra versión. Cubre TypeScript, JavaScript y JSON; el SQL y Python los rige `.editorconfig`. `scripts/verificar-formato.py` comprueba que no haya derivado.
 - El esquema se cambia **añadiendo una migración**, nunca editando una ya aplicada.
 - **Las migraciones son estructura; el contenido va en semillas.** `aplicar.sh` corre todas las migraciones antes que las semillas, así que un `UPDATE` sobre el catálogo metido en una migración se ejecuta contra una tabla vacía y no hace nada, sin dar error. Funciona en la máquina de quien fue añadiendo migraciones sobre una base ya sembrada, y falla en una instalación desde cero. Ya pasó una vez, con tres migraciones a la vez.
 - **Verificar siempre desde un reinicio completo**, no incrementalmente: `./db/aplicar.sh --reiniciar && ./db/aplicar.sh --semillas`. Es la única forma de reproducir lo que verán los demás.
@@ -131,11 +132,11 @@ Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que corre
 
 ## Estado actual
 
-Hay ambiente, esquema, catálogo sembrado y el **esqueleto del servidor** en `api/`: TypeScript, `npm run dev` con recarga, y su servicio en el compose con `/salud` respondiendo. Tarea 1 hecha.
+Hay ambiente, esquema, catálogo sembrado y el **esqueleto del servidor** en `api/`: TypeScript, `npm run dev` con recarga, y su servicio en el compose con `/salud` respondiendo. Y formato automático con Biome, idéntico en las cuatro máquinas.
 
 **No hay lógica todavía**: ni configuración validada, ni acceso a datos, ni interfaz, ni pruebas de la aplicación. `/salud` responde `arrancado` y no comprueba nada, a propósito.
 
-Lo siguiente, tres en paralelo porque solo dependen de la 1: la **8** (formateador), la **2** (configuración validada) y la **6** (errores HTTP). Después la **3**, `conUsuario()`, que es de donde cuelga la regla 1 y la más importante del proyecto.
+Tareas **1 y 8 hechas**. Lo siguiente, dos en paralelo porque solo dependen de la 1: la **2** (configuración validada) y la **6** (errores HTTP). Después la **3**, `conUsuario()`, que es de donde cuelga la regla 1 y la más importante del proyecto.
 
 **Antes de escribir la primera línea del servidor, leer `docs/arquitectura.md`.** Las decisiones 1 a 4 son justo las que toman las tareas 1, 3, 6 y 7, y están tomadas ya: quién abre la transacción, qué rol no puede existir en el proceso que atiende peticiones, cómo cruza una fecha civil el JSON y qué forma tiene un error HTTP.
 

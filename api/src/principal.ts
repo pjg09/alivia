@@ -15,54 +15,54 @@
 // `up --wait` sepa que el proceso arrancó. La tarea 7 lo reemplaza por Express
 // y hace que /salud informe de verdad.
 
-import { createServer } from 'node:http'
+import { createServer } from "node:http";
 
 // Dentro del contenedor siempre es 3000; PUERTO mueve el que se publica en la
 // maquina, igual que PUERTO_POSTGRES con la base de datos. La validacion de
 // verdad de esta variable llega con la tarea 2.
-const PUERTO = Number(process.env['PUERTO'] ?? 3000)
+const PUERTO = Number(process.env.PUERTO ?? 3000);
 
 const servidor = createServer((peticion, respuesta) => {
-  if (peticion.url === '/salud') {
-    respuesta.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
+  if (peticion.url === "/salud") {
+    respuesta.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     respuesta.end(
       JSON.stringify({
-        estado: 'arrancado',
+        estado: "arrancado",
         // Honesto a propósito: todavía no comprueba nada. Tarea 7.
         comprueba: [],
-        nota: 'esqueleto de la tarea 1: no verifica la base de datos ni el correo',
+        nota: "esqueleto de la tarea 1: no verifica la base de datos ni el correo",
       }),
-    )
-    return
+    );
+    return;
   }
 
-  respuesta.writeHead(404, { 'content-type': 'application/json; charset=utf-8' })
-  respuesta.end(JSON.stringify({ error: { codigo: 'NO_ENCONTRADO', mensaje: 'No existe' } }))
-})
+  respuesta.writeHead(404, { "content-type": "application/json; charset=utf-8" });
+  respuesta.end(JSON.stringify({ error: { codigo: "NO_ENCONTRADO", mensaje: "No existe" } }));
+});
 
 // Un puerto ocupado es el primer tropiezo en una maquina nueva. Que diga qué
 // pasa y qué hacer, no una traza de veinte lineas sobre 'error' no manejado.
-servidor.on('error', (error: NodeJS.ErrnoException) => {
-  if (error.code === 'EADDRINUSE') {
+servidor.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code === "EADDRINUSE") {
     console.error(
       `[alivia/api] el puerto ${PUERTO} esta ocupado.\n` +
         `             Poner otro en el .env:  PUERTO=3005\n` +
         `             O parar lo que lo tenga cogido.`,
-    )
-    process.exit(1)
+    );
+    process.exit(1);
   }
-  console.error(`[alivia/api] no se pudo escuchar en ${PUERTO}: ${error.message}`)
-  process.exit(1)
-})
+  console.error(`[alivia/api] no se pudo escuchar en ${PUERTO}: ${error.message}`);
+  process.exit(1);
+});
 
 servidor.listen(PUERTO, () => {
-  console.log(`[alivia/api] escuchando en http://localhost:${PUERTO}`)
-})
+  console.log(`[alivia/api] escuchando en http://localhost:${PUERTO}`);
+});
 
 // Sin esto, `docker compose stop` espera diez segundos y mata el proceso.
-for (const senal of ['SIGTERM', 'SIGINT'] as const) {
+for (const senal of ["SIGTERM", "SIGINT"] as const) {
   process.on(senal, () => {
-    console.log(`[alivia/api] ${senal}: cerrando`)
-    servidor.close(() => process.exit(0))
-  })
+    console.log(`[alivia/api] ${senal}: cerrando`);
+    servidor.close(() => process.exit(0));
+  });
 }
