@@ -2,6 +2,12 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.6.0](https://github.com/pjg09/alivia/compare/v0.5.0...v0.6.0) (2026-09-26)
+
+### Funcionalidad
+
+* **api:** conUsuario() hace imposible consultar sin contexto ([4878dfa](https://github.com/pjg09/alivia/commit/4878dfa5622c7bfd45862ae2f6dbd81738a58e0f))
+
 ## [0.5.0](https://github.com/pjg09/alivia/compare/v0.4.0...v0.5.0) (2026-09-26)
 
 ### Funcionalidad
