@@ -2,6 +2,12 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.7.0](https://github.com/pjg09/alivia/compare/v0.6.0...v0.7.0) (2026-09-30)
+
+### Funcionalidad
+
+* **api:** npm test corre contra una base efímera por fichero ([a2dcc49](https://github.com/pjg09/alivia/commit/a2dcc4918691bf2b1a9397f2d55066ce4eb2c26a))
+
 ## [0.6.0](https://github.com/pjg09/alivia/compare/v0.5.0...v0.6.0) (2026-09-26)
 
 ### Funcionalidad
