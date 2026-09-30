@@ -14,6 +14,7 @@
     "dev": "npm run dev --workspace @alivia/api",
     "build": "npm run build --workspaces --if-present",
     "tipos": "npm run tipos --workspaces --if-present",
+    "test": "tsx api/pruebas/arnes/ejecutar.ts",
     "configuracion": "tsx api/src/configuracion/comprobar.ts",
     "errores": "tsx api/src/http/comprobar.ts",
     "datos": "tsx api/src/datos/comprobar.ts",

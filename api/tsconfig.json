@@ -17,10 +17,14 @@
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": true,
 
-    "outDir": "dist",
-    "rootDir": "src",
     "sourceMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    // Esta configuracion COMPRUEBA; no emite. Cubre las pruebas ademas del
+    // codigo, porque una prueba que no compila es una prueba que no protege.
+    // La que emite es tsconfig.build.json, y deja las pruebas fuera para que no
+    // acaben dentro de la imagen.
+    "noEmit": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "pruebas/**/*.ts"]
 }

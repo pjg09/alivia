@@ -11,7 +11,7 @@ COPY package.json package-lock.json ./
 COPY api/package.json ./api/
 RUN npm ci
 
-COPY api/tsconfig.json ./api/
+COPY api/tsconfig.json api/tsconfig.build.json ./api/
 COPY api/src ./api/src
 RUN npm run build --workspace @alivia/api
 

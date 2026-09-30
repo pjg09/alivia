@@ -29,7 +29,17 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 
 # Donde puede vivir cada cosa. Si la disposicion cambia, cambia aqui y se
 # explica por que, en lugar de que la regla se erosione sin que nadie lo note.
-SOLO_DATOS = ("api/src/datos",)
+# El pool vive en api/src/datos y en ningun otro sitio DEL SERVIDOR. El arnes de
+# pruebas tambien necesita `pg`, y por una razon que no es acceso a datos: crear
+# y borrar bases de datos exige el rol propietario y no se puede hacer a traves
+# de conUsuario(). No corre en ningun contenedor y no atiende peticiones.
+#
+# Lo que NO se permite es que un fichero *.prueba.ts importe `pg`: con una
+# conexion propia, una prueba de aislamiento pasaria sin comprobar nada, porque
+# el propietario ignora las politicas por completo. Las pruebas consultan por
+# conUsuario(), con alivia_app, que si esta sujeto a RLS.
+SOLO_DATOS = ("api/src/datos", "api/pruebas/arnes")
+NUNCA_PG = (".prueba.ts",)
 SOLO_AVISOS = ("api/src/configuracion/avisos.ts", "api/src/avisos", "avisos/src")
 SOLO_ERRORES = ("api/src/http/errores.ts",)
 
@@ -89,12 +99,16 @@ def main() -> int:
     infractores_pg = []
     infractores_avisos = []
     infractores_error = []
+    infractores_prueba_pg = []
 
     for rel, texto in fuentes():
         revisados += 1
 
-        if IMPORTA_PG.search(texto) and not permitido(rel, SOLO_DATOS):
-            infractores_pg.append(rel)
+        if IMPORTA_PG.search(texto):
+            if rel.endswith(NUNCA_PG):
+                infractores_prueba_pg.append(rel)
+            elif not permitido(rel, SOLO_DATOS):
+                infractores_pg.append(rel)
 
         if "DATABASE_URL_AVISOS" in texto and not permitido(rel, SOLO_AVISOS):
             infractores_avisos.append(rel)
@@ -119,6 +133,13 @@ def main() -> int:
               f"{', '.join(infractores_avisos)}. Ese rol lee las obligaciones de TODOS los "
               f"usuarios; en el proceso que atiende peticiones anula el aislamiento sin dar "
               f"un solo error (decision 2 de docs/arquitectura.md)")
+
+    comprobar(not infractores_prueba_pg,
+              "ninguna prueba abre su propia conexion",
+              f"estas pruebas importan «pg» directamente: {', '.join(infractores_prueba_pg)}. "
+              f"Con una conexion propia y el rol propietario, una prueba de aislamiento pasa sin "
+              f"comprobar nada. Las pruebas consultan por conUsuario(), con alivia_app, que si "
+              f"esta sujeto a RLS. Las fixtures que necesiten privilegios van en api/pruebas/arnes")
 
     comprobar(not infractores_error,
               f"solo {'/'.join(SOLO_ERRORES)} da forma a una respuesta de error",

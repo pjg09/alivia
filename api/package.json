@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "tsx watch src/principal.ts",
     "tipos": "tsc --noEmit",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/principal.js"
   },
   "devDependencies": {

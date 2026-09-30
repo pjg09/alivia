@@ -1,0 +1,12 @@
+{
+  // Lo que emite. Solo src: una prueba dentro de la imagen es peso muerto, y
+  // el arnes de pruebas sabe crear bases de datos, que no tiene nada que hacer
+  // en lo que corre en un contenedor.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"]
+}

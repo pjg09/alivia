@@ -134,9 +134,11 @@ Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que corre
 
 Hay ambiente, esquema, catálogo sembrado y los **cimientos del servidor** en `api/`: TypeScript con `npm run dev` y recarga, formato automático con Biome, configuración validada al arrancar, acceso a datos con `conUsuario()`, y la política de errores y el registro de peticiones.
 
-**Lo que falta de la fase 0**: el arnés de pruebas (tarea 4), las trece comprobaciones de RLS portadas (5) y Express con el `/salud` de verdad (7). Hoy `/salud` responde `arrancado` y **declara que no comprueba nada**, a propósito. No hay interfaz ni `npm test`.
+**Lo que falta de la fase 0**: las trece comprobaciones de RLS portadas (tarea 5) y Express con el `/salud` de verdad (7). Hoy `/salud` responde `arrancado` y **declara que no comprueba nada**, a propósito. No hay interfaz.
 
-Tareas **1, 2, 3, 6 y 8 hechas**. Lo siguiente es la **4**, el arnés de pruebas con esquema efímero, y con ella `npm test` empieza a correr en la integración continua.
+Tareas **1, 2, 3, 4, 6 y 8 hechas**. Lo siguiente es la **5**: portar a la capa de datos las trece comprobaciones de `db/pruebas/rls.sql`.
+
+**`npm test` ya corre en la integración continua**, y el arnés no toca la base de trabajo: crea una plantilla, le aplica migraciones y semillas desde cero, y **cada fichero de pruebas se copia su propia base** de esa plantilla. Las pruebas corren con `alivia_app`, sujeto a RLS; una prueba **no puede** abrir su propia conexión, y las fixtures con privilegios viven en `api/pruebas/arnes/`. Los detalles, en `api/pruebas/README.md`.
 
 **La regla 1 ya está construida, no prometida.** `api/src/datos/contexto.ts` es el único fichero que conoce el pool: `conUsuario(usuarioId, tx => …)` abre la transacción, fija `alivia.usuario_id` y `alivia.fecha_referencia` dentro de ella y cierra. El pool no se exporta, y `Tx` lleva una marca con un símbolo que no sale de ahí, así que **el compilador rechaza fabricar uno**. Anidar lanza, un `Tx` guardado no sirve después, y `npm run datos` lo ejercita contra la base real.
 
