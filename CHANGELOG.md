@@ -2,6 +2,12 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.7.1](https://github.com/pjg09/alivia/compare/v0.7.0...v0.7.1) (2026-10-02)
+
+### Correcciones
+
+* **infra:** las pruebas dejan de poder pasar contra otro proyecto ([630b434](https://github.com/pjg09/alivia/commit/630b4341e9ecbddb6508e1d89a06dd7f9464b991))
+
 ## [0.7.0](https://github.com/pjg09/alivia/compare/v0.6.0...v0.7.0) (2026-09-30)
 
 ### Funcionalidad
