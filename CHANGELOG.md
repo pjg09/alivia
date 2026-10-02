@@ -2,6 +2,16 @@
 
 Generado automáticamente a partir de los mensajes de commit. No editar a mano.
 
+## [0.8.0](https://github.com/pjg09/alivia/compare/v0.7.1...v0.8.0) (2026-10-02)
+
+### Funcionalidad
+
+* **api:** el servidor pasa a Express y /salud comprueba de verdad ([1f667f7](https://github.com/pjg09/alivia/commit/1f667f718780b8063b666fbc7d1380db005c1e99))
+
+### Pruebas
+
+* **api:** npm test falla si la aplicación se salta el aislamiento ([b618e3f](https://github.com/pjg09/alivia/commit/b618e3f6c2a9d6f63075db6632743dcfc17f9e29))
+
 ## [0.7.1](https://github.com/pjg09/alivia/compare/v0.7.0...v0.7.1) (2026-10-02)
 
 ### Correcciones
