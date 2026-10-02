@@ -40,7 +40,7 @@ Nada de esto entrega valor al usuario y todo lo demás depende de ello. La tarea
 | 4 | **HECHA** · Arnés de pruebas con esquema efímero: cada prueba corre contra una base limpia | `npm test` aplica migraciones y semillas desde cero y deja la base como la encontró. **Definir ese script en `package.json` basta para que la integración continua lo ejecute**: no hay que tocar el flujo de trabajo | 3 |
 | 5 | **HECHA** · Las trece comprobaciones de `db/pruebas/rls.sql` portadas a la capa de datos de la aplicación | `npm test` falla si alguien conecta con el rol equivocado o pierde el contexto de transacción | 4 |
 | 6 | **HECHA** · Manejo de errores HTTP y registro de peticiones | Un error no controlado devuelve un código y un cuerpo coherentes, y **nunca** filtra detalles internos ni datos de usuario | 1 |
-| 7 | Servidor Express con endpoint de salud | `GET /salud` responde y reporta si la base de datos y el correo están accesibles | 2, 6 |
+| 7 | **HECHA** · Servidor Express con endpoint de salud | `GET /salud` responde y reporta si la base de datos y el correo están accesibles | 2, 6 |
 
 ---
 

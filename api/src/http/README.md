@@ -5,8 +5,22 @@
 | `errores.ts` | **El único sitio que da forma a una respuesta de error.** Taxonomía y traducción |
 | `registro.ts` | Una línea por petición, y qué no entra en ella |
 | `comprobar.ts` | `npm run errores` — el catálogo de códigos, y `-- fugas` para probar la frontera |
+| `servidor.ts` | La aplicación Express. **No escucha**: eso lo hace `principal.ts` |
+| `salud.ts` | `GET /salud` y sus comprobaciones |
 
-Express, los middlewares y las rutas llegan con la **tarea 7**. La política de errores y el registro —tarea 6— no dependen de ningún marco a propósito: son funciones puras, así que se prueban sin levantar un servidor y la tarea 7 solo las conecta.
+`servidor.ts` no llama a `listen()` a propósito: así las pruebas la levantan en un puerto efímero y no chocan con el contenedor ni con `npm run dev`.
+
+La política de errores y el registro se escribieron sin depender de ningún marco, y conectarlos a Express no les cambió una línea.
+
+## `GET /salud`
+
+«Accesible» no es «el puerto está abierto» —eso ya nos engañó una vez—. Para la base se ejecuta una consulta; para el correo se lee el saludo y se exige un `220` de SMTP.
+
+**Cada dependencia declara si es esencial.** Solo la base lo es: con el correo caído el servidor atiende todo, porque enviar es trabajo del proceso de avisos. Así que `/salud` responde **200 con `estado: "degradado"`** y reserva el **503** para un fallo esencial. El healthcheck del contenedor lee el código, y «api enfermo» tiene que querer decir que el api está mal.
+
+**Qué no sale de ahí:** ni cadenas de conexión, ni anfitriones, ni puertos, ni el saludo literal del servidor de correo —el de Mailpit lleva dentro el identificador del contenedor—. Es un endpoint sin autenticar.
+
+Todas las comprobaciones tienen límite de dos segundos. Sin él, un fallo de resolución de nombres tardaba cinco —medido— y el síntoma pasaba de «la base no responde» a «/salud no responde», que dice menos.
 
 ## El contrato
 

@@ -136,9 +136,11 @@ Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que corre
 
 Hay ambiente, esquema, catálogo sembrado y los **cimientos del servidor** en `api/`: TypeScript con `npm run dev` y recarga, formato automático con Biome, configuración validada al arrancar, acceso a datos con `conUsuario()`, y la política de errores y el registro de peticiones.
 
-**Lo que falta de la fase 0**: solo la tarea **7**, Express con el `/salud` de verdad. Hoy `/salud` responde `arrancado` y **declara que no comprueba nada**, a propósito. No hay interfaz.
+**La fase 0 está completa.** `GET /salud` comprueba de verdad la base y el correo: ejecuta una consulta y lee el saludo SMTP exigiendo un `220`, porque «el puerto está abierto» ya nos engañó una vez. No hay interfaz todavía.
 
-Tareas **1, 2, 3, 4, 5, 6 y 8 hechas**: la fase 0 está completa salvo la **7**, que es la siguiente.
+**Toda la fase 0 está hecha** (tareas 1 a 8). Lo siguiente es la fase 1, cuentas: la **9**, hash de contraseña con `@node-rs/argon2`.
+
+El servidor es Express 5 en `api/src/http/servidor.ts`, que **no escucha** —`principal.ts` lo hace— para que las pruebas lo levanten en un puerto efímero. En `/salud` cada dependencia declara si es **esencial**: solo la base lo es, así que con el correo caído responde 200 y `degradado`, y el 503 queda para un fallo esencial.
 
 **El aislamiento se comprueba dos veces, y no es redundante.** `db/pruebas/rls.sql` demuestra que las políticas aíslan; `api/pruebas/rls.prueba.ts` demuestra que `conUsuario()` las respeta. Entre las dos está lo que puede ir mal en la aplicación. Comprobado provocándolo: cambiar la URL al rol propietario deja 8 pruebas en rojo, y que `conUsuario()` deje de fijar el contexto, 7.
 

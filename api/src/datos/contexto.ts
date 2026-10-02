@@ -69,6 +69,24 @@ export function iniciarAcceso(opciones: OpcionesDeAcceso): void {
     // colgada cuando hay tres procesos hablando con la misma base.
     application_name: "alivia-api",
   });
+
+  // SIN ESTO EL PROCESO MUERE. El pool emite `error` cuando una conexion en
+  // reposo se rompe --la base se reinicia, la red se corta-- y un evento
+  // 'error' sin oyente en Node tumba el proceso entero.
+  //
+  // Comprobado: parando postgres, el servidor salia con 1 y el contenedor
+  // quedaba «Exited (1)». Y eso pasa cada vez que alguien corre
+  // `npm run actualizar` o la maquina se suspende.
+  //
+  // Lo correcto es seguir sirviendo: la conexion rota se descarta, la siguiente
+  // transaccion abre otra, y mientras tanto GET /salud responde 503 diciendo
+  // que la base no esta accesible. Caerse no informa a nadie.
+  pool.on("error", (error) => {
+    console.error(
+      `[alivia/api] una conexion en reposo se rompio: ${error.message}. ` +
+        "Se descarta; la siguiente transaccion abrira otra.",
+    );
+  });
 }
 
 export async function cerrarAcceso(): Promise<void> {
@@ -191,11 +209,7 @@ async function enTransaccion<T>(
  *
  * Al salir hace COMMIT; si `trabajo` lanza, ROLLBACK y se propaga el error.
  */
-export function conUsuario<T>(
-  usuarioId: string,
-  trabajo: (tx: Tx) => Promise<T>,
-  opciones: OpcionesDeTransaccion = {},
-): Promise<T> {
+export function conUsuario<T>(usuarioId: string, trabajo: (tx: Tx) => Promise<T>): Promise<T> {
   if (!UUID.test(usuarioId)) {
     // Sin esto, un identificador mal formado revienta dentro de las políticas
     // con «invalid input syntax for type uuid», que es un 500 y no dice nada.
@@ -203,7 +217,34 @@ export function conUsuario<T>(
       new Error(`«${usuarioId}» no es un identificador de usuario: se esperaba un uuid`),
     );
   }
-  return enTransaccion(usuarioId, trabajo, opciones);
+  return enTransaccion(usuarioId, trabajo);
+}
+
+/**
+ * Como `conUsuario()`, pero moviendo el reloj SOLO en esta transacción.
+ *
+ * En postgres la fecha de referencia ya es local a la transacción:
+ * `set_config(..., true)` se deshace al cerrar. Esto refleja la base, no la
+ * contradice, y es lo que deja escribir «al expirar deja de verse y al renovar
+ * reaparece intacta» como tres transacciones con tres relojes.
+ *
+ * Tiene nombre propio para que se pueda prohibir por nombre: lo usan las
+ * pruebas y el comando de avisos de la tarea 34, y **nada bajo `api/src/http/`**.
+ * Una petición que mueva el reloj deja a cualquiera adelantar el suyo y ver
+ * vencimientos que no son. Decisión 4e, y lo comprueba
+ * scripts/verificar-arquitectura.py.
+ */
+export function conUsuarioEnFecha<T>(
+  usuarioId: string,
+  fechaCivil: string,
+  trabajo: (tx: Tx) => Promise<T>,
+): Promise<T> {
+  if (!UUID.test(usuarioId)) {
+    return Promise.reject(
+      new Error(`«${usuarioId}» no es un identificador de usuario: se esperaba un uuid`),
+    );
+  }
+  return enTransaccion(usuarioId, trabajo, { fechaReferencia: fechaCivil });
 }
 
 /**
@@ -218,11 +259,8 @@ export function conUsuario<T>(
  * contra NULL y la consulta devuelve cero filas sin avisar. Se llama así para
  * que dé reparo escribirlo.
  */
-export function sinContextoDeUsuario<T>(
-  trabajo: (tx: Tx) => Promise<T>,
-  opciones: OpcionesDeTransaccion = {},
-): Promise<T> {
-  return enTransaccion(null, trabajo, opciones);
+export function sinContextoDeUsuario<T>(trabajo: (tx: Tx) => Promise<T>): Promise<T> {
+  return enTransaccion(null, trabajo);
 }
 
 /** Para el arranque y para `GET /salud` (tarea 7). No abre transacción. */

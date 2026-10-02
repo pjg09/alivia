@@ -149,21 +149,22 @@ def main() -> int:
               f"un correo esta registrado. Lanzar un ErrorDeAplicacion y dejar que lo traduzca "
               f"un solo sitio (decision 4 de docs/arquitectura.md)")
 
-    # Decision 4e: la fecha de referencia se inyecta por variable de entorno del
-    # proceso, NUNCA por peticion. conUsuario() acepta moverla por transaccion
-    # --lo necesitan las pruebas y el comando de avisos-- y eso abre la puerta a
-    # que alguien la conecte a una cabecera. Una cabecera que mueve el reloj deja
-    # a cualquiera adelantar el suyo y ver vencimientos que no son.
+    # Decision 4e: la fecha de referencia se inyecta por el entorno del proceso,
+    # NUNCA por peticion. Una cabecera que mueva el reloj deja a cualquiera
+    # adelantar el suyo y ver vencimientos que no son.
+    #
+    # Se prohibe por NOMBRE y no por la palabra «fechaReferencia»: /salud la usa
+    # para INFORMAR de si el reloj esta inyectado, que es lo contrario de
+    # inyectarlo. Lo que no puede aparecer es la puerta que lo mueve.
     infractores_reloj = [
         rel for rel, texto in fuentes()
-        if "fechaReferencia" in texto and rel.startswith("api/src/http/")
+        if "conUsuarioEnFecha" in texto and rel.startswith("api/src/http/")
     ]
     comprobar(not infractores_reloj,
-              "nada en api/src/http/ mueve la fecha de referencia",
-              f"estos ficheros de la capa HTTP mencionan fechaReferencia: "
+              "nada en api/src/http/ mueve el reloj de una transaccion",
+              f"estos ficheros de la capa HTTP usan conUsuarioEnFecha(): "
               f"{', '.join(infractores_reloj)}. La fecha se inyecta por el entorno del "
-              f"proceso, nunca por peticion: una cabecera que mueva el reloj deja a "
-              f"cualquiera adelantar el suyo (decision 4e de docs/arquitectura.md)")
+              f"proceso, nunca por peticion (decision 4e de docs/arquitectura.md)")
 
     # El pool no se exporta: es lo que hace que no haya otra puerta a los datos.
     contexto = RAIZ / "api/src/datos/contexto.ts"

@@ -13,7 +13,12 @@
 
 import { strict as assert } from "node:assert";
 import { after, before, describe, test } from "node:test";
-import { conUsuario, sinContextoDeUsuario, type Tx } from "../src/datos/contexto.js";
+import {
+  conUsuario,
+  conUsuarioEnFecha,
+  sinContextoDeUsuario,
+  type Tx,
+} from "../src/datos/contexto.js";
 import { abrirBaseEfimera, type BaseEfimera } from "./arnes/base.js";
 
 /** Código de PostgreSQL para «insufficient_privilege»: lo que lanza RLS. */
@@ -47,11 +52,11 @@ async function idDe(correo: string): Promise<string> {
 }
 
 async function cuantas(usuarioId: string, sql: string, p: unknown[] = [], reloj?: string) {
-  const { n } = await conUsuario(
-    usuarioId,
-    async (tx) => unaFila<{ n: string }>(tx, sql, p),
-    reloj === undefined ? {} : { fechaReferencia: reloj },
-  );
+  const leer = async (tx: Tx) => unaFila<{ n: string }>(tx, sql, p);
+  const { n } =
+    reloj === undefined
+      ? await conUsuario(usuarioId, leer)
+      : await conUsuarioEnFecha(usuarioId, reloj, leer);
   return Number(n);
 }
 
@@ -151,14 +156,11 @@ describe("aislamiento entre usuarios a través de conUsuario()", () => {
   // el dato: eso es la regla 6.
 
   test("dentro de vigencia hay acceso a salud y se ven sus obligaciones", async () => {
-    const { acceso } = await conUsuario(
-      ana,
-      async (tx) =>
-        unaFila<{ acceso: boolean }>(
-          tx,
-          "SELECT app.tiene_acceso(app.usuario_actual(), 'salud') AS acceso",
-        ),
-      { fechaReferencia: "2026-06-15" },
+    const { acceso } = await conUsuarioEnFecha(ana, "2026-06-15", async (tx) =>
+      unaFila<{ acceso: boolean }>(
+        tx,
+        "SELECT app.tiene_acceso(app.usuario_actual(), 'salud') AS acceso",
+      ),
     );
     assert.equal(acceso, true);
 
@@ -172,14 +174,11 @@ describe("aislamiento entre usuarios a través de conUsuario()", () => {
   });
 
   test("fuera de vigencia no hay acceso y ana deja de ver salud", async () => {
-    const { acceso } = await conUsuario(
-      ana,
-      async (tx) =>
-        unaFila<{ acceso: boolean }>(
-          tx,
-          "SELECT app.tiene_acceso(app.usuario_actual(), 'salud') AS acceso",
-        ),
-      { fechaReferencia: "2027-06-15" },
+    const { acceso } = await conUsuarioEnFecha(ana, "2027-06-15", async (tx) =>
+      unaFila<{ acceso: boolean }>(
+        tx,
+        "SELECT app.tiene_acceso(app.usuario_actual(), 'salud') AS acceso",
+      ),
     );
     assert.equal(acceso, false, "una suscripción expirada sigue dando acceso");
 

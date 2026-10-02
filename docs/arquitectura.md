@@ -157,6 +157,7 @@ Solo lo que cuatro personas inventarían distinto.
 | 404 | No existe, o no es de este usuario y no se distingue |
 | 409 | Conflicto de estado: cumplir algo ya cumplido, solapar suscripciones |
 | 500 | Lo demás, con cuerpo genérico y el detalle solo en el registro |
+| 503 | **Solo `/salud`**, y solo si falló algo sin lo que el servidor no puede trabajar. No es un error de dominio: es la señal operativa que lee el healthcheck del contenedor. Con el correo caído responde **200** y `estado: "degradado"` — el servidor atiende todo, porque enviar es del proceso de avisos. Si «api enfermo» pudiera querer decir «el correo está caído», nadie volvería a mirar ese estado |
 
 **b) Rutas en español, sustantivos en plural; las acciones son subrecursos en verbo.**
 
@@ -172,7 +173,7 @@ No es estética. La regla 6 exige confirmación explícita, y una acción con no
 
 **d) Fechas** según la decisión 3.
 
-**e) La fecha de referencia se inyecta por variable de entorno del proceso, nunca por cabecera de petición.** Una cabecera tipo `X-Alivia-Fecha` es cómoda para la sustentación y es un agujero el día que se queda puesta: cualquiera adelantaría el reloj de su propia sesión. Para demostrar el servidor con otra fecha, se reinicia el servicio con la variable.
+**e) La fecha de referencia se inyecta por variable de entorno del proceso, nunca por cabecera de petición.** La puerta que la mueve por transacción se llama `conUsuarioEnFecha()` para poder prohibirla por nombre: `verificar-arquitectura.py` falla si aparece bajo `api/src/http/`. Una cabecera tipo `X-Alivia-Fecha` es cómoda para la sustentación y es un agujero el día que se queda puesta: cualquiera adelantaría el reloj de su propia sesión. Para demostrar el servidor con otra fecha, se reinicia el servicio con la variable.
 
 ---
 
