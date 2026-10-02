@@ -40,6 +40,21 @@ Cuando una fixture necesita privilegios —leer el identificador de un usuario s
 
 Ahora el arnés distingue tres casos y dice qué hacer en cada uno: nadie contesta, contesta otro postgres, o contesta el correcto sin el esquema aplicado.
 
+## Las trece de RLS, y por qué están dos veces
+
+`rls.prueba.ts` porta las trece comprobaciones de `db/pruebas/rls.sql`. **No es una copia por gusto:** las de SQL demuestran que las *políticas* aíslan; estas demuestran que `conUsuario()` las *respeta*. Entre una cosa y la otra está todo lo que puede ir mal en la aplicación — conectar con el rol equivocado, perder el contexto, abrir la transacción donde no toca — y es justo lo que las de SQL no pueden ver.
+
+Los nombres siguen los de `rls.sql` para poder cruzarlas.
+
+El criterio de la tarea 5 es que `npm test` falle si alguien conecta con el rol equivocado o pierde el contexto. Se comprobó provocando las dos cosas:
+
+| Sabotaje | Resultado |
+|---|---|
+| La URL de la aplicación cambiada a `alivia_propietario` | 8 pruebas en rojo |
+| `conUsuario()` dejando de fijar `alivia.usuario_id` | 7 pruebas en rojo |
+
+La primera es la que importa entender: **con el rol propietario todas las pruebas de aislamiento pasarían**, porque ignora las políticas. La que lo delata es la que afirma `current_user = 'alivia_app'` y que no tiene `BYPASSRLS`. Sin ella, el resto del fichero daría una falsa tranquilidad.
+
 ## Añadir una prueba
 
 Un fichero `*.prueba.ts` bajo `api/pruebas/`, con `before`/`after` abriendo y cerrando su base:

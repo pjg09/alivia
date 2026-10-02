@@ -133,6 +133,57 @@ Hoy el trabajo de verificación tarda alrededor de un minuto, porque los tres se
 
 **Lo que sí se hace,** el día que moleste de verdad: caché de capas de buildx entre ejecuciones (`cache-from`/`cache-to` con el almacén de GitHub Actions). No cambia lo que se construye ni cómo, solo lo reutiliza.
 
+## Mirar la base con pgAdmin (o con cualquier cliente)
+
+| Campo | Valor |
+|---|---|
+| Host | `localhost` |
+| Puerto | el que publique el compose: **5434** por defecto, o lo que diga `PUERTO_POSTGRES` en tu `.env` |
+| Base | `alivia` |
+| Usuario | `alivia_propietario` |
+| Contraseña | `desarrollo` |
+
+Si el cliente corre **en un contenedor**, `localhost` es el propio contenedor: hace falta `host.docker.internal` y arrancarlo con `--add-host=host.docker.internal:host-gateway`. Con un cliente nativo no hay nada que hacer.
+
+### Con qué rol entras cambia lo que ves, y uno de los dos parece roto
+
+```
+alivia_propietario →  usuario: 2    obligacion_usuario: 3    catálogo: 40
+alivia_app         →  usuario: 0    obligacion_usuario: 0    catálogo: 40
+```
+
+**Las tablas vacías no son un fallo: son RLS funcionando.** `alivia_app` filtra por `app.usuario_actual()`, que sin contexto es `NULL`, y una comparación con `NULL` no es verdadera. Falla cerrado, que es como debe fallar. El catálogo sí se ve porque es información compartida, no de nadie.
+
+**Para navegar el esquema, entra con `alivia_propietario`**, que es superusuario e ignora las políticas.
+
+### Para mirar lo que vería un usuario
+
+Conectado como `alivia_app`, y **todo en la misma ejecución**:
+
+```sql
+BEGIN;
+  SELECT set_config('alivia.usuario_id', 'de00a482-71ee-4944-af7c-52b474a7e44e', true);
+  SELECT nombre, fecha_base, tipo_exigibilidad FROM obligacion_usuario;
+COMMIT;
+```
+
+Si separas el `set_config` de la consulta en dos ejecuciones, vuelve a darte **cero filas sin ningún error**: es la regla 1 de `CLAUDE.md` y el defecto que la originó.
+
+Los usuarios sembrados y su asimetría, que es la que verifica el aislamiento:
+
+| Correo | Identificador | Tiene |
+|---|---|---|
+| `ana@prueba.local` | `de00a482-71ee-4944-af7c-52b474a7e44e` | suscripción a salud en 2026 |
+| `beto@prueba.local` | `3c9ececa-156c-494a-98e3-d9b98cc47c18` | ninguna |
+
+### No experimentes escribiendo en esta base
+
+`npm test` ya no la toca —se crea las suyas—, pero `./db/aplicar.sh --reiniciar` la destruye. Para jugar, una copia:
+
+```sql
+CREATE DATABASE alivia_juego TEMPLATE alivia;   -- exige que nadie esté conectado a alivia
+```
+
 ## Un puerto publicado no es una identidad
 
 Antes de correr una sola prueba, `scripts/verificar-todo.sh` ejecuta `scripts/identidad.py`: pregunta a docker **quién publica** cada puerto al que se van a conectar las pruebas, y exige que sea un contenedor de este compose.

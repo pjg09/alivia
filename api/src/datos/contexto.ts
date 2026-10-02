@@ -109,9 +109,28 @@ function construirTx(cliente: PoolClient, sigueViva: () => boolean): Tx {
   return tx as unknown as Tx;
 }
 
+export type OpcionesDeTransaccion = {
+  /**
+   * Fecha civil AAAA-MM-DD que vera `app.hoy()` SOLO en esta transaccion.
+   *
+   * Existe porque en postgres la fecha de referencia ya es local a la
+   * transaccion: `set_config(..., true)` se deshace al cerrar. Exponerla aqui
+   * refleja la base, no la contradice, y es lo que deja escribir la propiedad
+   * «al expirar deja de verse, y al renovar reaparece intacta» como tres
+   * transacciones con tres relojes, en lugar de tres ficheros.
+   *
+   * La usan las pruebas y el comando de avisos de la tarea 34. NUNCA una
+   * peticion HTTP: una cabecera que mueva el reloj deja a cualquiera adelantar
+   * el suyo. Decision 4e de docs/arquitectura.md, y lo comprueba
+   * scripts/verificar-arquitectura.py.
+   */
+  readonly fechaReferencia?: string | undefined;
+};
+
 async function enTransaccion<T>(
   usuarioId: string | null,
   trabajo: (tx: Tx) => Promise<T>,
+  opciones: OpcionesDeTransaccion = {},
 ): Promise<T> {
   // Anidar abriría una SEGUNDA transacción, en otra conexión, y lo que pasara
   // en una no sería atómico con la otra. La tarea 11 exige justo lo contrario:
@@ -136,7 +155,12 @@ async function enTransaccion<T>(
     // ventana de 30 días sin mover el reloj de la máquina.
     const filas = await cliente.query<{ usuario: string; fecha: string }>(
       "SELECT set_config($1, $2, true) AS usuario, set_config($3, $4, true) AS fecha",
-      ["alivia.usuario_id", usuarioId ?? "", "alivia.fecha_referencia", fechaReferencia ?? ""],
+      [
+        "alivia.usuario_id",
+        usuarioId ?? "",
+        "alivia.fecha_referencia",
+        opciones.fechaReferencia ?? fechaReferencia ?? "",
+      ],
     );
 
     const fijado = filas.rows[0]?.usuario;
@@ -167,7 +191,11 @@ async function enTransaccion<T>(
  *
  * Al salir hace COMMIT; si `trabajo` lanza, ROLLBACK y se propaga el error.
  */
-export function conUsuario<T>(usuarioId: string, trabajo: (tx: Tx) => Promise<T>): Promise<T> {
+export function conUsuario<T>(
+  usuarioId: string,
+  trabajo: (tx: Tx) => Promise<T>,
+  opciones: OpcionesDeTransaccion = {},
+): Promise<T> {
   if (!UUID.test(usuarioId)) {
     // Sin esto, un identificador mal formado revienta dentro de las políticas
     // con «invalid input syntax for type uuid», que es un 500 y no dice nada.
@@ -175,7 +203,7 @@ export function conUsuario<T>(usuarioId: string, trabajo: (tx: Tx) => Promise<T>
       new Error(`«${usuarioId}» no es un identificador de usuario: se esperaba un uuid`),
     );
   }
-  return enTransaccion(usuarioId, trabajo);
+  return enTransaccion(usuarioId, trabajo, opciones);
 }
 
 /**
@@ -190,8 +218,11 @@ export function conUsuario<T>(usuarioId: string, trabajo: (tx: Tx) => Promise<T>
  * contra NULL y la consulta devuelve cero filas sin avisar. Se llama así para
  * que dé reparo escribirlo.
  */
-export function sinContextoDeUsuario<T>(trabajo: (tx: Tx) => Promise<T>): Promise<T> {
-  return enTransaccion(null, trabajo);
+export function sinContextoDeUsuario<T>(
+  trabajo: (tx: Tx) => Promise<T>,
+  opciones: OpcionesDeTransaccion = {},
+): Promise<T> {
+  return enTransaccion(null, trabajo, opciones);
 }
 
 /** Para el arranque y para `GET /salud` (tarea 7). No abre transacción. */

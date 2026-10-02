@@ -149,6 +149,22 @@ def main() -> int:
               f"un correo esta registrado. Lanzar un ErrorDeAplicacion y dejar que lo traduzca "
               f"un solo sitio (decision 4 de docs/arquitectura.md)")
 
+    # Decision 4e: la fecha de referencia se inyecta por variable de entorno del
+    # proceso, NUNCA por peticion. conUsuario() acepta moverla por transaccion
+    # --lo necesitan las pruebas y el comando de avisos-- y eso abre la puerta a
+    # que alguien la conecte a una cabecera. Una cabecera que mueve el reloj deja
+    # a cualquiera adelantar el suyo y ver vencimientos que no son.
+    infractores_reloj = [
+        rel for rel, texto in fuentes()
+        if "fechaReferencia" in texto and rel.startswith("api/src/http/")
+    ]
+    comprobar(not infractores_reloj,
+              "nada en api/src/http/ mueve la fecha de referencia",
+              f"estos ficheros de la capa HTTP mencionan fechaReferencia: "
+              f"{', '.join(infractores_reloj)}. La fecha se inyecta por el entorno del "
+              f"proceso, nunca por peticion: una cabecera que mueva el reloj deja a "
+              f"cualquiera adelantar el suyo (decision 4e de docs/arquitectura.md)")
+
     # El pool no se exporta: es lo que hace que no haya otra puerta a los datos.
     contexto = RAIZ / "api/src/datos/contexto.ts"
     if contexto.exists():

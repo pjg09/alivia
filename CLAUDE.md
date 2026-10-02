@@ -128,7 +128,7 @@ Las pruebas SQL corren con `alivia_app`, que está sujeto a las políticas. Si u
 
 **Cruzar `aviso.mensaje_id` con el correo entregado** tiene una sintaxis que no es obvia: `GET /api/v1/search?query=message-id:<valor>`, con el prefijo `message-id:` y **sin** los corchetes angulares. Buscar el valor crudo devuelve cero resultados sin dar error. Es de lo que depende la tarea 36.
 
-Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario; las de calendario, al tocar fechas o la función que las resuelve.
+Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario —y con ella `api/pruebas/rls.prueba.ts`, que comprueba lo otro: que la aplicación las respete—; las de calendario, al tocar fechas o la función que las resuelve.
 
 **Antes de correr nada, la suite comprueba a quién pertenecen los puertos.** `scripts/identidad.py` le pregunta a docker si los publica un contenedor de este compose, y si no, no se corre nada. Viene de un verde falso reproducido: con el Mailpit de Alivia parado y el de otro proyecto en el mismo puerto, `verificar-mailpit.py` **pasaba** — enviaba un correo y lo encontraba en la bandeja equivocada. Un puerto publicado no es una identidad. Está en `docs/ambiente.md`.
 
@@ -136,9 +136,11 @@ Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que corre
 
 Hay ambiente, esquema, catálogo sembrado y los **cimientos del servidor** en `api/`: TypeScript con `npm run dev` y recarga, formato automático con Biome, configuración validada al arrancar, acceso a datos con `conUsuario()`, y la política de errores y el registro de peticiones.
 
-**Lo que falta de la fase 0**: las trece comprobaciones de RLS portadas (tarea 5) y Express con el `/salud` de verdad (7). Hoy `/salud` responde `arrancado` y **declara que no comprueba nada**, a propósito. No hay interfaz.
+**Lo que falta de la fase 0**: solo la tarea **7**, Express con el `/salud` de verdad. Hoy `/salud` responde `arrancado` y **declara que no comprueba nada**, a propósito. No hay interfaz.
 
-Tareas **1, 2, 3, 4, 6 y 8 hechas**. Lo siguiente es la **5**: portar a la capa de datos las trece comprobaciones de `db/pruebas/rls.sql`.
+Tareas **1, 2, 3, 4, 5, 6 y 8 hechas**: la fase 0 está completa salvo la **7**, que es la siguiente.
+
+**El aislamiento se comprueba dos veces, y no es redundante.** `db/pruebas/rls.sql` demuestra que las políticas aíslan; `api/pruebas/rls.prueba.ts` demuestra que `conUsuario()` las respeta. Entre las dos está lo que puede ir mal en la aplicación. Comprobado provocándolo: cambiar la URL al rol propietario deja 8 pruebas en rojo, y que `conUsuario()` deje de fijar el contexto, 7.
 
 **`npm test` ya corre en la integración continua**, y el arnés no toca la base de trabajo: crea una plantilla, le aplica migraciones y semillas desde cero, y **cada fichero de pruebas se copia su propia base** de esa plantilla. Las pruebas corren con `alivia_app`, sujeto a RLS; una prueba **no puede** abrir su propia conexión, y las fixtures con privilegios viven en `api/pruebas/arnes/`. Los detalles, en `api/pruebas/README.md`.
 
