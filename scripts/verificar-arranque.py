@@ -276,6 +276,19 @@ def main() -> int:
                       f"{ruta} apunta a localhost:{puerto} y el compose no publica ese "
                       f"puerto (publica {sorted(publicados)}): una de las dos copias derivo")
 
+    # --- La suite no corre contra los servicios de otro proyecto -------------
+    # Un puerto publicado no es una identidad. Esto se comprueba aqui porque
+    # quitar esa precondicion de verificar-todo.sh no rompe nada visible: la
+    # suite seguiria pasando, y pasaria contra el servicio equivocado.
+    f_todo = RAIZ / "scripts/verificar-todo.sh"
+    todo = f_todo.read_text(encoding="utf-8") if f_todo.exists() else ""
+    comprobar("scripts/identidad.py" in todo,
+              "la suite comprueba la identidad de los servicios antes de correr nada",
+              "verificar-todo.sh ya no corre scripts/identidad.py. Sin esa comprobacion "
+              "previa, con el contenedor de Alivia parado y otro proyecto en el mismo puerto "
+              "las pruebas hablan con el servicio ajeno, y algunas PASAN: enviar un correo y "
+              "encontrarlo en la bandeja de otro no falla, convence")
+
     # --- La integracion continua arranca con este compose, no con otra cosa --
     flujo = RAIZ / ".github/workflows/release.yml"
     if flujo.exists():

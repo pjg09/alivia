@@ -18,12 +18,24 @@ import urllib.parse
 import urllib.request
 from email.message import EmailMessage
 
+import identidad
+
 # Del entorno, con los mismos valores por defecto que publica el compose.
 # Fijarlos en el codigo significaba probar contra la bandeja equivocada cuando
 # los puertos se mueven; scripts/verificar-arranque.py vigila que no vuelvan
 # a divergir.
 SMTP = (os.environ.get("SMTP_HOST", "localhost"), int(os.environ.get("SMTP_PUERTO", "1025")))
 API = os.environ.get("MAILPIT_API", "http://localhost:8025/api/v1")
+
+# Antes de enviar nada: que la bandeja sea la de Alivia y no la de otro
+# proyecto de la maquina. Sin esto, con el Mailpit de Alivia parado y el de otro
+# proyecto en el mismo puerto, esta comprobacion PASA: envia un correo y lo
+# encuentra... en la bandeja equivocada. Reproducido a proposito con un
+# contenedor intruso. El porque, en scripts/identidad.py.
+identidad.exigir({
+    SMTP[1]: "el correo (SMTP)",
+    int(urllib.parse.urlparse(API).port or 8025): "la bandeja de correo (API)",
+})
 
 
 def api(path, metodo="GET"):

@@ -133,6 +133,28 @@ Hoy el trabajo de verificación tarda alrededor de un minuto, porque los tres se
 
 **Lo que sí se hace,** el día que moleste de verdad: caché de capas de buildx entre ejecuciones (`cache-from`/`cache-to` con el almacén de GitHub Actions). No cambia lo que se construye ni cómo, solo lo reutiliza.
 
+## Un puerto publicado no es una identidad
+
+Antes de correr una sola prueba, `scripts/verificar-todo.sh` ejecuta `scripts/identidad.py`: pregunta a docker **quién publica** cada puerto al que se van a conectar las pruebas, y exige que sea un contenedor de este compose.
+
+**No es prudencia, es un verde falso reproducido.** Con el Mailpit de Alivia parado y el de otro proyecto de la misma máquina escuchando en el mismo puerto, `verificar-mailpit.py` **pasaba**: enviaba un correo y lo encontraba… en la bandeja equivocada. Se comprobó levantando un contenedor intruso a propósito, y salía con 0.
+
+La identidad no se puede preguntar por el protocolo —un postgres es un postgres y un Mailpit es un Mailpit—, así que se le pregunta a docker. Y la propiedad del puerto sale de `docker compose config`, no de `docker compose ps`: un contenedor parado no publica nada, así que `ps` diría «ese puerto no es nuestro» cuando lo correcto es «el nuestro está parado **y ahora lo tiene otro**», que es lo que hay que leer para saber qué hacer.
+
+Los tres mensajes que distingue:
+
+```
+puerto 1026 — el correo (SMTP)
+       lo declara «mailpit» de Alivia, pero el contenedor esta «exited».
+       Y ahora mismo lo tiene «intruso-correo (axllent/mailpit:latest)»: lo que
+       se pruebe contra ese puerto NO es Alivia, y puede pasar en verde.
+       Levantarlo:  npm run arrancar
+```
+
+**Es una precondición, no una prueba**, y por eso está escrita en `verificar-todo.sh` y no se descubre: tiene que correr *antes* de todo lo demás. Si falla, la suite no corre nada: seis grupos rojos cuentan mucho peor que una línea diciendo qué pasa. Que esa línea siga ahí lo comprueba `verificar-arranque.py`, porque quitarla no rompe nada visible —la suite seguiría pasando, contra el servicio equivocado—.
+
+El puerto del servidor no se comprueba: ningún verificador lo usa todavía, y pararlo para correr `npm run dev` en el anfitrión es legítimo.
+
 ## Correr una segunda pila en paralelo
 
 Para probar el arranque desde cero sin destruir la base de trabajo:

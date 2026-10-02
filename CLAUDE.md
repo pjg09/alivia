@@ -130,6 +130,8 @@ Las pruebas SQL corren con `alivia_app`, que está sujeto a las políticas. Si u
 
 Cualquier línea que diga `FALLA` es un defecto. La de aislamiento hay que correrla después de tocar políticas, roles o el esquema de cualquier tabla con datos de usuario; las de calendario, al tocar fechas o la función que las resuelve.
 
+**Antes de correr nada, la suite comprueba a quién pertenecen los puertos.** `scripts/identidad.py` le pregunta a docker si los publica un contenedor de este compose, y si no, no se corre nada. Viene de un verde falso reproducido: con el Mailpit de Alivia parado y el de otro proyecto en el mismo puerto, `verificar-mailpit.py` **pasaba** — enviaba un correo y lo encontraba en la bandeja equivocada. Un puerto publicado no es una identidad. Está en `docs/ambiente.md`.
+
 ## Estado actual
 
 Hay ambiente, esquema, catálogo sembrado y los **cimientos del servidor** en `api/`: TypeScript con `npm run dev` y recarga, formato automático con Biome, configuración validada al arrancar, acceso a datos con `conUsuario()`, y la política de errores y el registro de peticiones.

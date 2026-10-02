@@ -150,7 +150,9 @@ En local, lo mismo con un comando:
 | `scripts/verificar-*.py` | Verificadores del proyecto: orden del backlog, camino del aviso | `python3`, y su código de salida decide |
 | `npm test` | Pruebas de la aplicación: unitarias y de integración | En cuanto `package.json` defina el script |
 
-Poner una prueba en otro sitio equivale a que nadie la corra. Si hace falta una categoría nueva, se añade al descubrimiento en `scripts/verificar-todo.sh`, no al flujo de trabajo.
+Poner una prueba en otro sitio equivale a que nadie la corra.
+
+**Antes de la primera prueba corre una precondición**, `scripts/identidad.py`, que exige que los puertos los publiquen contenedores de este compose. Si otro proyecto de la máquina tiene uno, la suite no corre: hablaría con el servicio equivocado, y algunas comprobaciones **pasarían**. No se descubre como las pruebas porque tiene que ir primero. Si hace falta una categoría nueva, se añade al descubrimiento en `scripts/verificar-todo.sh`, no al flujo de trabajo.
 
 ### Cómo se escribe una prueba de base de datos
 

@@ -59,6 +59,23 @@ if [ "${1:-}" = "--reiniciar" ]; then
   ./db/aplicar.sh --semillas >/dev/null || { rojo "No se pudo aplicar el esquema"; exit 1; }
 fi
 
+# --- Comprobacion previa: ¿son estos los servicios de Alivia? ----------------
+# No es una prueba, es una precondicion, y por eso esta escrita aqui y no se
+# descubre: tiene que correr ANTES de todo lo demas. Un puerto publicado no es
+# una identidad, y con el contenedor de Alivia parado otro proyecto de la misma
+# maquina puede quedarse con el. Entonces las pruebas hablan con el servicio
+# equivocado, y algunas PASAN: enviar un correo y encontrarlo en la bandeja de
+# otro no falla, convence. Comprobado con un contenedor intruso.
+echo
+echo "== Comprobación previa: identidad de los servicios =="
+if salida=$(python3 scripts/identidad.py 2>&1); then
+  printf '%s\n' "$salida"
+else
+  printf '%s\n' "$salida" | sed 's/^/  /'
+  rojo "  No se corre nada más: lo que respondiera en esos puertos no es Alivia."
+  exit 1
+fi
+
 # --- Pruebas de base de datos ------------------------------------------------
 echo
 echo "== Pruebas de base de datos =="
